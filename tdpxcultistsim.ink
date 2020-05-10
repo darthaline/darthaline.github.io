@@ -1,3 +1,4 @@
+# theme: dark
 The very first Card came to Viren with his mother's dying words. She whispered them hurriedly into his ear, an almost nonsensial jumble of words from senile old woman, but the look in her eyes, as she pulled away, was as bright and unforgiving as the midday sun.
 + [Examine the card.]
 -> aWatchmensSecret
