@@ -283,6 +283,8 @@ The crossroads sign had three directions
 + [The Temple of the Wheel] -> ending
 
 //--------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------
 === knockPathStart ===
 As the city tower bell rang three times Viren realized that he spent many hours in his contemplation. His head felt heavy but empty, each thought echoing around like in a tall cave with hidden treasures waiting to be open. He shuffled in his item pouch looking for the door key, perhaps it was a time to retire for the night. He made his way to the door, dextrously flicking the key around his finger.
 As he inserted it into the keyhole, he heard a sudden knock. Not from the door, but rather from the table. He turned around. The gild of the Cards flickered dagnerously. Something was different this time.
@@ -309,16 +311,27 @@ He curled his finger counting.
 
 === HARROWnormalDreams ===
 
-"That's an impecable analysis, Your Highness, but you said it was one of 'those dreams'. Do you mean to say you get these dreams often?"
+"That was an impecable analysis, Your Highness, but you said it was one of 'those dreams'. Do you mean to say you get them often?"
 Harrow shook his head, the line of his mouth tense as a soft blush spread across his face.
 "No, that's not common, no. What I meant was," he paused for a moment, "A <em>you</em> dream."
 "A <em>me</em> dream?" Viren repeated, confused.
 "Yes!" Harrow said, "Well, the kind of dream you'd be up to something, and then we'd start arguing, and then I'd have to punish you," he finished, clearly embarassed.
+
++[Well, that is unusual.] -> HARROWunusual
+
+=== HARROWunusual ===
+"That's..." Viren frowned, "I'm not sure how to respond. Your honesty about this is astonishing."
+"Well, it's a dream," Harrow shrugged, "Not like it would matter, plus, you aren't arguing with me about dark magic, for once."
+"How do you know it's a dream, and not dark magic then?"
+"Oh, that's easy," Harrow said, "If it was magic, then I wouldn't be able to do this."
+He waved his arms a bit, and suddenly was floating near Viren without any visible support.
+Viren considered it for a moment and pushed himself off of nothing. The flight didn't come as naturally to him as it did to Harrow, but after a few awkward turns he managed to steady himself. It reminded him of his children telling him of their dreams of flying, and a few library books mentioning 'lucid dreamers'. Those accounts always seemed fake to Viren, but apparently his king was one of them.
+
 +[Suggest alternative.] -> HARROWpositiveReinforcement
 
 === HARROWpositiveReinforcement ===
-"Punish..." Viren said, thinking, "Have you perhaps considered using positive reinforcement?"
-"Positive reinforcement?"
+"Punish me, you say..." Viren said, thinking, "Have you perhaps considered using positive reinforcement?"
+"Positive reinforcement?" Harrow repeated.
 "Well, if punishment isn't working, you could instead reward me for the kind of behavior you like to see?"
 "Reward? Hmmm, I suppose," Harrow cupped his chin, thoughtfully.
 +[What sort of behavior is that, anyway?] -> HARROWbehaivor
@@ -343,7 +356,7 @@ Viren frowned.
 +[Question it.] -> HARROWquestion
 
 === HARROWquestion ===
-Viren raised his eyebrows.
+Viren tilted his head.
 "How can you be sure then that it's not something you want?" asked Viren.
 "I- Well, that sounds like such a grim thought, Viren," said Harrow.
 This conversation felt surreal, far more than any they could have had outside of Card induced dream, but Viren couldn't help his curiosity and fascination. With Harrow believing he was just a figment of a dream, his king was far more straightforward with his feelings when he ever was in real life. 
@@ -351,25 +364,88 @@ This conversation felt surreal, far more than any they could have had outside of
 +[Question further.] -> HARROWquestionFurther
 
 === HARROWquestionFurther ===
-
 "But am I wrong?" Viren asked.
 Harrow thought.
 "No, you're not wrong, Viren."
-Harrow took one of Viren's hands in his, and ran his thumb over Viren's knuckles.
-Viren considered pulling away, but it felt... nice. Surely, even if it was just elaborata illusion created by the Cards, there could be no harm in indulging himself a little? But if it wasn't - surely there were no downsides to having Harrow be honest with him?
+Harrow floated closer to him, and took one of Viren's hands in his, and ran his thumb over Viren's knuckles.
+Viren considered pulling away, but it felt... nice. Surely, even if it was just elaborate illusion created by the Cards, there could be no harm in indulging himself a little? But if it wasn't - well, there were no downsides to having Harrow be honest with him?
 "You look tired, Viren."
 Viren ran his other hand through his hair, self conciously. He couldn't help himself staying up all night for research, but with years that habbit has been starting to catch up with him.
 "Perhaps you are right, Viren," Harrow pulled him towards himself gently.
 
-+[What?] -> HARROWWhat
++[What?] -> HARROWwhat
 
-=== HARROWWhat ===
-
+=== HARROWwhat ===
 "Harrow- Your Highness, what are you doing?"
-They were standing (floating?) very close together, their breaths mingling. 
+They were floating very close together, their breaths mingling.
+"You said I should try positive reinforcement - and you have been really helpful tonight. Far more than I've come to expect from dream-you."
+Viren felt the heat creeping onto his face.
+
++[Thank him.] -> HARROWthank
+
+=== HARROWthank ===
+"Thank you, sire."
+Harrow let go of Viren's hand, and put it onto Viren's waist, bringing them even closer together. 
+"I- um," Viren stammered.
+Harrow could be rather afectionate and liberal with personal space, when in a good mood, but that felt far more intimate, than what Viren ever experienced from him.
+"Would you like me to stop?" Harrow asked.
+Would he? Viren wasn't sure. There were times back in his youth when Harrow's attention was all that Viren cared about. Many years passed since, both of them had duties, and Viren thought that he long since purged any of those frivolous thoughts from his mind. And yet now he felt hard pressed to deny how tempting it was.
+
++[Answer.] -> HARROWanswer
+
+=== HARROWanswer ===
+"Viren?" Harrow gently tilted Viren's head to make him look at himself. "Answer me."
+"Harrow, I- don't know?" Viren said. "I'm not sure what you're offering."
+"Let me show you then."
+
++[Show?] -> HARROWshow
+
+=== HARROWshow ===
+Viren didn't have time to wonder what that meant, as Harrow leaned closer and kissed him.
+The kiss could almost be described as chaste, their lips touching softly, as Harrow's hand sat firmly on the back of Viren's neck.
+As Harrow moved away to look at him, Viren felt a strange feeling of loss.
+Viren held onto Harrow's arm, unsure of what to say.
+"Well?" said Harrow.
+
++[Reply.] -> HARROWreply
+
+=== HARROWreply ===
+The question in Viren's mind felt self defeating, but he couldn't stop himself from asking it anyway.
+"Harrow, are you only offering this because it's a dream?"
+Harrow thought a while before replying.
+"Are you asking whether I'm brave enough to invite you to my bed in real life? Because I don't think I am."
+"But do you want this in real life?"
+Harrow half shrugged.
+"I... It was so simple with Sarai. With you it's like pulling teeth." Harrow looked away from him. "You are clever and infuriating. I admire you. But I'm not sure that if you had to choice between dark magic and myself..." Harrow trailed off.
+
++[Choose.] -> HARROWchoose
+
+=== HARROWchoose ===
+"Harrow, you are my king," Viren started. "I live to serve you."
+"But what if I ever told you that from now on you're forbidden to use dark magic?" Harrow asked.
+"Then I will serve you however I can. I don't know how that would be, but I will find a way." Viren replied.
+And after a short pause continued.
+"Though, if your life was in danger I will never forgive myself if I didn't do anything in my power to save you, so I won't make any promises about that."
+Harrow snorted.
+"Absolutely infuriating." Harrow said, pulling Viren back to himself.
+
++[!!!] -> HARROWkiss
+
+=== HARROWkiss ===
+
+The second kiss was nothing like the first. All the softness was gone, and all what's left was raw power, pushing past Viren's reservations like a force of nature. A shiver went down Viren's spine, as he was clutching at Harrow's shoulders. It felt as if they were impossibly close, their bodies flushed together, evidence of Harrow interest pressing hard against Viren's own.
+Harrow pulled away for just a moment.
+"Do you?.."
+"Please," Viren wasn't sure what he was asking for, but Harrow's hands pulling at his pants laces meant it was the right answer.
+After a bit of fumbling, Harrow's hand pressed hotly agains Viren's cock, making him gasp.
+
+
+
+
 
 -> ending
-
+//--------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------
 === mothPathStart ===
 As the city tower bell rang three times Viren realized that he spent many hours in his contemplation. His mind felt airy, filled with chaotic thoughts, flickering their wings around in a capricioius dance. He stood up and walked up to the window, pushing it open. In came the fresh night air, and a small determined moth. The creature waved it's wings unsteadily and flew deeper into the room. Viren wached it make way to the table, and noticed how the gild of the Cards flickered dagnerously. Something was different this time.
