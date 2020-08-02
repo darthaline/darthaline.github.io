@@ -7,8 +7,9 @@ This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute
 
 First we set up our environment, set the directory to the current script location and loading the libraries.
 ```{r setup, message = FALSE}
-library("rstudioapi") #to grab local position of the script
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+#library("rstudioapi") #to grab local position of the script
+#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+knitr::opts_knit$set(root.dir = '.')
 
 library("rvest") # to handle html stuff
 
@@ -95,10 +96,16 @@ Test cases for valid cases.
 #url <-'https://archiveofourown.org/works?utf8=%E2%9C%93&commit=Sort+and+Filter&work_search%5Bsort_column%5D=revised_at&include_work_search%5Brating_ids%5D%5B%5D=11&include_work_search%5Bcategory_ids%5D%5B%5D=2246&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=&work_search%5Bdate_to%5D=&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=&tag_id=The+Dragon+Prince+%28Cartoon%29' #4
 
 # lots of pages
-url <-'https://archiveofourown.org/works/search?commit=Search&page=1&utf8=%E2%9C%93&work_search%5Bbookmarks_count%5D=&work_search%5Bcharacter_names%5D=&work_search%5Bcomments_count%5D=&work_search%5Bcomplete%5D=T&work_search%5Bcreators%5D=Anonymous&work_search%5Bcrossover%5D=F&work_search%5Bfandom_names%5D=&work_search%5Bfreeform_names%5D=&work_search%5Bhits%5D=&work_search%5Bkudos_count%5D=&work_search%5Blanguage_id%5D=&work_search%5Bquery%5D=&work_search%5Brating_ids%5D=&work_search%5Brelationship_names%5D=&work_search%5Brevised_at%5D=&work_search%5Bsingle_chapter%5D=0&work_search%5Bsort_column%5D=hits&work_search%5Bsort_direction%5D=desc&work_search%5Btitle%5D=&work_search%5Bword_count%5D='
+#url <-'https://archiveofourown.org/works/search?commit=Search&page=1&utf8=%E2%9C%93&work_search%5Bbookmarks_count%5D=&work_search%5Bcharacter_names%5D=&work_search%5Bcomments_count%5D=&work_search%5Bcomplete%5D=T&work_search%5Bcreators%5D=Anonymous&work_search%5Bcrossover%5D=F&work_search%5Bfandom_names%5D=&work_search%5Bfreeform_names%5D=&work_search%5Bhits%5D=&work_search%5Bkudos_count%5D=&work_search%5Blanguage_id%5D=&work_search%5Bquery%5D=&work_search%5Brating_ids%5D=&work_search%5Brelationship_names%5D=&work_search%5Brevised_at%5D=&work_search%5Bsingle_chapter%5D=0&work_search%5Bsort_column%5D=hits&work_search%5Bsort_direction%5D=desc&work_search%5Btitle%5D=&work_search%5Bword_count%5D='
 
 # valid page, no results
 #url <-'https://archiveofourown.org/works?utf8=%E2%9C%93&work_search%5Bsort_column%5D=revised_at&include_work_search%5Bcharacter_ids%5D%5B%5D=34497277&include_work_search%5Bcharacter_ids%5D%5B%5D=35339642&include_work_search%5Bcharacter_ids%5D%5B%5D=38146864&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=&work_search%5Bdate_to%5D=&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=ru&commit=Sort+and+Filter&tag_id=Hades+%28Video+Game+2018%29'
+
+```
+
+```{r researchUrls, message = FALSE}
+#tdp page
+url <- 'https://archiveofourown.org/tags/The%20Dragon%20Prince%20(Cartoon)/works'
 ```
 
 Before we start processing anything, we check that the search has valid results.
@@ -318,8 +325,16 @@ Grabbing data from the search page
 
 #creating a list for works data
 worksData <- list()
+#counter of how many times server slapped the program on the wrist for accessing too much info
+# -> increases wait time before requesting the next
+# https://www.scrapehero.com/web-scraping-tutorial-for-beginners-navigating-and-extracting-data/
+# https://www.scrapehero.com/how-to-prevent-getting-blacklisted-while-scraping/
+waitTime <- c(1:5)
 
 for (linkCounter in 1:length(linkList)){
+  
+  #waiting before the next request
+  Sys.sleep(sample(waitTime, 1))
   
   #progress output
   if (linkCounter %% 5 == 0) {
@@ -329,16 +344,32 @@ for (linkCounter in 1:length(linkList)){
   #grabbing data from the page
   readSuccess <- FALSE
   
+  #try opening and reading from url, if it's not successul, wait for a minute, increase total wait time by one second and try again
   while(!readSuccess){
     readSuccess <- TRUE
-    tryCatch(urlActive <- url(linkList[linkCounter], "rb"), 
-             error = function() {
-               readSuccess <- FALSE
-               Sys.sleep(60)
-             })
+    tryCatch({
+      urlActive <- url(linkList[linkCounter], "rb")
+      searchPage <- read_html(urlActive)
+    },
+      error = function(e) {
+        message(paste('Error:', e))
+        print('URL Error')
+        readSuccess <- FALSE
+        Sys.sleep(60)
+      },
+      warning = function(w) {
+        message(paste('Warning:', w))
+        print('URL warning')
+        readSuccess <- FALSE
+        Sys.sleep(60)
+      })
+    if (!readSuccess) {
+      waitTime <- waitTime + 1
+    }
   }
   
-  searchPage <- read_html(urlActive)
+  rm(readSuccess)
+  
   close(urlActive)
   #filtering for works descriptions
   worksList <- html_nodes(searchPage, '.blurb')
@@ -352,15 +383,16 @@ for (linkCounter in 1:length(linkList)){
     #filtering author
     authorTemp <- html_text(titleTemp)[html_attr(titleTemp, 'rel') == 'author']
     authorTemp <- authorTemp[!is.na(authorTemp)]
+    if (length(authorTemp) == 0) {
+      authorTemp <- 'Anonymous'
+    }
     
     #grabbing fandoms
     fandomTemp <- html_nodes(worksList[i], '.fandoms')
     fandomTemp <- html_text(html_nodes(fandomTemp, '.tag'))
     
     #filtering warnings
-    warningsTemp <- html_text(html_nodes(worksList[i], '.warnings'))
-    warningsTemp <- warningsTemp[warningsTemp == ""]
-    warningsTemp[warningsTemp == "Choose Not To Use Archive Warnings"] <- "Creator Chose Not To Use Archive Warnings"
+    warningsTemp <- html_text(html_nodes(html_nodes(worksList[i], '.warnings'), 'a'))
     
     #grabbing the date of publication/last update
     dateTemp <- html_text(html_nodes(worksList[i], '.datetime'))
@@ -380,14 +412,14 @@ for (linkCounter in 1:length(linkList)){
                      'Author' = authorTemp,
                      'Fandom' = fandomTemp,
                      'Rating' = unique(html_text(html_nodes(worksList[i], '.rating'))),
-                     'Warnings' = unique(warningsTemp),
+                     'Warnings' = warningsTemp,
                      'Category' = strsplit(html_text(html_nodes(worksList[i], '.category')), ', ')[[1]],
-                     'Completion Status' = unique(html_text(html_nodes(worksList[i], '.iswip'))),
+                     'WIP' = unique(html_text(html_nodes(worksList[i], '.iswip'))),
                      'Date' = dateTemp,
                      'Nonfiction' = metaTemp,
-                     'Relationships Count' = length(html_nodes(html_nodes(worksList[i], '.tags'), '.relationships')),
-                     'Character Count' = length(html_nodes(html_nodes(worksList[i], '.tags'), '.characters')),
-                     'Freeform Count' = length(html_nodes(html_nodes(worksList[i], '.tags'), '.freeforms')),
+                     'Relationships' = html_text(html_nodes(html_nodes(worksList[i], '.tags'), '.relationships')),
+                     'Character' = html_text(html_nodes(html_nodes(worksList[i], '.tags'), '.characters')),
+                     'Freeform' = html_text(html_nodes(html_nodes(worksList[i], '.tags'), '.freeforms')),
                      'Language' = html_text(statsTemp[ html_attr(statsTemp, 'class') == 'language' ]),
                      'Words' = as.numeric(gsub(',','',html_text(statsTemp[ html_attr(statsTemp, 'class') == 'words' ]))),
                      'Chapters' = chapterTemp[1],
@@ -407,9 +439,10 @@ for (linkCounter in 1:length(linkList)){
 rm(worksList, i, linkCounter)
 
 #object.size(worksData)
-save(worksData, file='worksData.RData')
+save(searchParameters, linkList, tagValue, totalPages, url, worksTotal, worksData, file='worksData.RData')
 
 #problem for searches which are too long:
 #https://httpstatuses.com/429
 
 ```
+
