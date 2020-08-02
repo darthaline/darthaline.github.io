@@ -1,0 +1,415 @@
+---
+title: "Ao3 Scrapping"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+First we set up our environment, set the directory to the current script location and loading the libraries.
+```{r setup, message = FALSE}
+library("rstudioapi") #to grab local position of the script
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+
+library("rvest") # to handle html stuff
+
+library("lubridate") # to handle dates
+```
+
+Preliminary attempt at authentication, doesn't work at the moment.
+```{r authentication, eval=FALSE}
+#https://riptutorial.com/r/example/23955/using-rvest-when-login-is-required
+#Address of the login webpage
+# lots of pages
+url <-'https://archiveofourown.org/works/search?commit=Search&page=1&utf8=%E2%9C%93&work_search%5Bbookmarks_count%5D=&work_search%5Bcharacter_names%5D=&work_search%5Bcomments_count%5D=&work_search%5Bcomplete%5D=T&work_search%5Bcreators%5D=Anonymous&work_search%5Bcrossover%5D=F&work_search%5Bfandom_names%5D=&work_search%5Bfreeform_names%5D=&work_search%5Bhits%5D=&work_search%5Bkudos_count%5D=&work_search%5Blanguage_id%5D=&work_search%5Bquery%5D=&work_search%5Brating_ids%5D=&work_search%5Brelationship_names%5D=&work_search%5Brevised_at%5D=&work_search%5Bsingle_chapter%5D=0&work_search%5Bsort_column%5D=hits&work_search%5Bsort_direction%5D=desc&work_search%5Btitle%5D=&work_search%5Bword_count%5D='
+
+#create a web session with the desired login address
+pgsession<-html_session(url)
+pgform<-html_form(pgsession)[[1]]  #submit is the 1nd form
+filled_form<-set_values(pgform, 'user[login]'="*****", 'user[password]'="*****", 'user[remember_me]'='1')
+submit_form(pgsession, filled_form)
+
+#grabbing data from the first page
+#page<-jump_to(pgsession, url)
+firstPage <- read_html(pgsession)
+
+#write_xml(firstPage, file="name_of_file.html")
+#grabbing pagination information
+pagination <- html_nodes(firstPage, '.pagination')
+#grabbing values of pages numbers
+pagesNumbers <- html_text(pagination)
+pagesNumbers
+
+#https://stackoverflow.com/questions/29390128/follow-a-page-redirect-using-rvest-in-r
+```
+
+Test cases for when the submitted URL is not valid.
+```{r testURLsFail, echo=FALSE, message=FALSE, eval=FALSE}
+#wrong site
+#url <- 'https://stackoverflow.com/questions/11134812/how-to-find-the-length-of-a-string-in-r'
+
+#not fic page
+#url <- 'https://archiveofourown.org/bookmarks'
+#url <- 'https://archiveofourown.org/tags'
+#url <- 'https://archiveofourown.org/admin_posts?language_id=en'
+#url <- 'https://archiveofourown.org/works/search'
+
+```
+
+A quick if statement, to check that the URL is valid.
+```{r checkURLsValidity, eval=FALSE}
+    # check that the url is linking to Ao3
+if (!grepl('https://archiveofourown.org/', url) ||
+    # to works page
+    !grepl('works' , url) ||
+    # and not to the search form
+    url == 'https://archiveofourown.org/works/search'){
+  
+  stop('URL must link to Ao3 works or search results page')
+}
+```
+
+Test cases for valid cases.
+```{r testUrls, echo=FALSE, message=FALSE}
+#works search
+#url <- 'https://archiveofourown.org/works' #3
+#url <- 'https://archiveofourown.org/works/search?utf8=%E2%9C%93&work_search%5Bquery%5D=&work_search%5Btitle%5D=&work_search%5Bcreators%5D=&work_search%5Brevised_at%5D=&work_search%5Bcomplete%5D=T&work_search%5Bcrossover%5D=&work_search%5Bsingle_chapter%5D=0&work_search%5Bword_count%5D=&work_search%5Blanguage_id%5D=&work_search%5Bfandom_names%5D=&work_search%5Brating_ids%5D=&work_search%5Bcategory_ids%5D%5B%5D=116&work_search%5Bcharacter_names%5D=&work_search%5Brelationship_names%5D=&work_search%5Bfreeform_names%5D=&work_search%5Bhits%5D=&work_search%5Bkudos_count%5D=&work_search%5Bcomments_count%5D=&work_search%5Bbookmarks_count%5D=&work_search%5Bsort_column%5D=_score&work_search%5Bsort_direction%5D=desc&commit=Search' #5
+#url <- 'https://archiveofourown.org/works/search?commit=Search&page=5&utf8=%E2%9C%93&work_search%5Bbookmarks_count%5D=&work_search%5Bcharacter_names%5D=&work_search%5Bcomments_count%5D=&work_search%5Bcomplete%5D=&work_search%5Bcreators%5D=&work_search%5Bcrossover%5D=&work_search%5Bfandom_names%5D=&work_search%5Bfreeform_names%5D=&work_search%5Bhits%5D=&work_search%5Bkudos_count%5D=&work_search%5Blanguage_id%5D=&work_search%5Bquery%5D=&work_search%5Brating_ids%5D=&work_search%5Brelationship_names%5D=&work_search%5Brevised_at%5D=&work_search%5Bsingle_chapter%5D=0&work_search%5Bsort_column%5D=_score&work_search%5Bsort_direction%5D=desc&work_search%5Btitle%5D=&work_search%5Bword_count%5D=' #5
+#url <- 'https://archiveofourown.org/works/search?utf8=%E2%9C%93&commit=Search&work_search%5Bquery%5D=&work_search%5Btitle%5D=&work_search%5Bcreators%5D=Anonymous&work_search%5Brevised_at%5D=&work_search%5Bcomplete%5D=T&work_search%5Bcrossover%5D=F&work_search%5Bsingle_chapter%5D=0&work_search%5Bsingle_chapter%5D=1&work_search%5Bword_count%5D=%3E100&work_search%5Blanguage_id%5D=en&work_search%5Bfandom_names%5D=Harry+Potter+-+J.+K.+Rowling&work_search%5Brating_ids%5D=13&work_search%5Barchive_warning_ids%5D%5B%5D=16&work_search%5Bcategory_ids%5D%5B%5D=23&work_search%5Bcharacter_names%5D=&work_search%5Brelationship_names%5D=&work_search%5Bfreeform_names%5D=&work_search%5Bhits%5D=%3E100&work_search%5Bkudos_count%5D=%3E10&work_search%5Bcomments_count%5D=%3C10&work_search%5Bbookmarks_count%5D=&work_search%5Bsort_column%5D=kudos_count&work_search%5Bsort_direction%5D=desc'
+#url <- 'https://archiveofourown.org/works/search?utf8=%E2%9C%93&work_search%5Bquery%5D=&work_search%5Btitle%5D=&work_search%5Bcreators%5D=Anonymous&work_search%5Brevised_at%5D=&work_search%5Bcomplete%5D=T&work_search%5Bcrossover%5D=F&work_search%5Bsingle_chapter%5D=0&work_search%5Bsingle_chapter%5D=1&work_search%5Bword_count%5D=%3E100&work_search%5Blanguage_id%5D=en&work_search%5Bfandom_names%5D=The+Avengers+%28Marvel+Movies%29&work_search%5Brating_ids%5D=13&work_search%5Barchive_warning_ids%5D%5B%5D=14&work_search%5Bcategory_ids%5D%5B%5D=23&work_search%5Bcharacter_names%5D=&work_search%5Brelationship_names%5D=&work_search%5Bfreeform_names%5D=&work_search%5Bhits%5D=&work_search%5Bkudos_count%5D=&work_search%5Bcomments_count%5D=&work_search%5Bbookmarks_count%5D=%3E10&work_search%5Bsort_column%5D=comments_count&work_search%5Bsort_direction%5D=desc&commit=Search'
+
+#single page
+#url <- 'https://archiveofourown.org/tags/Claudia*s*Kasef%20(The%20Dragon%20Prince)/works' #5
+
+#tag with low number of pages (first and last link)
+#url <-'https://archiveofourown.org/tags/Harrow*s*Viren%20(The%20Dragon%20Prince)/works' #5
+#url <- 'https://archiveofourown.org/tags/Harrow*s*Viren%20(The%20Dragon%20Prince)/works?page=8' #6
+#url <- 'https://archiveofourown.org/tags/Harrow*s*Viren%20(The%20Dragon%20Prince)/works?commit=Sort+and+Filter&include_work_search%5Brating_ids%5D%5B%5D=13&page=2&utf8=%E2%9C%93&work_search%5Bcomplete%5D=&work_search%5Bcrossover%5D=&work_search%5Bdate_from%5D=&work_search%5Bdate_to%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Blanguage_id%5D=&work_search%5Bother_tag_names%5D=&work_search%5Bquery%5D=&work_search%5Bsort_column%5D=revised_at&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=' #6
+
+
+#tag with high number of pages + filtered + last page
+#url <- 'https://archiveofourown.org/tags/Throne%20Sex/works' #5
+#url <- 'https://archiveofourown.org/works?utf8=%E2%9C%93&commit=Sort+and+Filter&work_search%5Bsort_column%5D=revised_at&include_work_search%5Brating_ids%5D%5B%5D=13&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=&work_search%5Bdate_to%5D=&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=&tag_id=Throne+Sex' #4
+#url <- 'https://archiveofourown.org/tags/Throne%20Sex/works?commit=Sort+and+Filter&include_work_search%5Brating_ids%5D%5B%5D=13&page=24&utf8=%E2%9C%93&work_search%5Bcomplete%5D=&work_search%5Bcrossover%5D=&work_search%5Bdate_from%5D=&work_search%5Bdate_to%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Blanguage_id%5D=&work_search%5Bother_tag_names%5D=&work_search%5Bquery%5D=&work_search%5Bsort_column%5D=revised_at&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=' #6
+
+# filtered tag
+#url <-'https://archiveofourown.org/works?utf8=%E2%9C%93&commit=Sort+and+Filter&work_search%5Bsort_column%5D=revised_at&include_work_search%5Brating_ids%5D%5B%5D=11&include_work_search%5Bcategory_ids%5D%5B%5D=2246&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=&work_search%5Bdate_to%5D=&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=&tag_id=The+Dragon+Prince+%28Cartoon%29' #4
+
+# lots of pages
+url <-'https://archiveofourown.org/works/search?commit=Search&page=1&utf8=%E2%9C%93&work_search%5Bbookmarks_count%5D=&work_search%5Bcharacter_names%5D=&work_search%5Bcomments_count%5D=&work_search%5Bcomplete%5D=T&work_search%5Bcreators%5D=Anonymous&work_search%5Bcrossover%5D=F&work_search%5Bfandom_names%5D=&work_search%5Bfreeform_names%5D=&work_search%5Bhits%5D=&work_search%5Bkudos_count%5D=&work_search%5Blanguage_id%5D=&work_search%5Bquery%5D=&work_search%5Brating_ids%5D=&work_search%5Brelationship_names%5D=&work_search%5Brevised_at%5D=&work_search%5Bsingle_chapter%5D=0&work_search%5Bsort_column%5D=hits&work_search%5Bsort_direction%5D=desc&work_search%5Btitle%5D=&work_search%5Bword_count%5D='
+
+# valid page, no results
+#url <-'https://archiveofourown.org/works?utf8=%E2%9C%93&work_search%5Bsort_column%5D=revised_at&include_work_search%5Bcharacter_ids%5D%5B%5D=34497277&include_work_search%5Bcharacter_ids%5D%5B%5D=35339642&include_work_search%5Bcharacter_ids%5D%5B%5D=38146864&work_search%5Bother_tag_names%5D=&work_search%5Bexcluded_tag_names%5D=&work_search%5Bcrossover%5D=&work_search%5Bcomplete%5D=&work_search%5Bwords_from%5D=&work_search%5Bwords_to%5D=&work_search%5Bdate_from%5D=&work_search%5Bdate_to%5D=&work_search%5Bquery%5D=&work_search%5Blanguage_id%5D=ru&commit=Sort+and+Filter&tag_id=Hades+%28Video+Game+2018%29'
+```
+
+Before we start processing anything, we check that the search has valid results.
+```{r searchHasResults}
+#grabbing data from the page
+urlActive <- url(url, "rb")
+firstPage <- read_html(urlActive)
+close(urlActive)
+
+#grabbing search results information
+searchHeading <- html_nodes(firstPage, 'h2')
+#grabbing the title with the number of works, splitting it
+worksTotal <- strsplit(html_text(searchHeading), ' ')[[1]]
+#grabbing the number of works found as the one before 'Works'
+worksTotal <- as.numeric(worksTotal[grep('Works', worksTotal) - 1])
+if (length(worksTotal) == 0) {
+  #grabbing search results information
+  searchHeading <- html_nodes(firstPage, 'h3')
+  #grabbing the title with the number of works, splitting it
+  worksTotal <- strsplit(html_text(searchHeading[2]), ' ')[[1]]
+  #grabbing the number of works found as the one before 'Works'
+  worksTotal <- as.numeric(worksTotal[grep('Found', worksTotal) - 1])
+}
+rm(searchHeading)
+
+if (worksTotal == 0){
+  stop("Search found no results. If you are able to see works in your search, it's possible that those works are only visible to registered users.")
+}
+```
+
+Processing the link address, to figure out the conditions of the request.
+```{r processLink}
+urlSplit <- strsplit(url, '/')[[1]]
+urlSplit <- unlist(strsplit(urlSplit, '\\?'))
+
+#only possible with url == 'https://archiveofourown.org/works/search' as far as i'm aware
+if (length(urlSplit) == 3){
+  searchSplit <- c()
+  tagValue <- c()
+}
+#filtered tags
+if (length(urlSplit) == 4){
+  searchSplit <- strsplit(urlSplit[4], '&')[[1]]
+  searchSplit <- gsub('%5D', '', searchSplit)
+  searchSplit <- gsub('%5B', '', searchSplit)
+  searchSplit <- gsub('work_search', '', searchSplit)
+  tagValue <- searchSplit[grep('tag_id=', searchSplit)]
+  tagValue <- gsub('tag_id=', '', tagValue)
+  tagValue <- gsub('\\+', ' ', tagValue)
+  tagValue <- gsub('%28', '(', tagValue)
+  tagValue <- gsub('%29', ')', tagValue)
+}
+# tag's first page
+if (length(urlSplit) == 5 & urlSplit[3] == 'tags') {
+  tagValue <- gsub('%20', ' ', urlSplit[4])
+  tagValue <- gsub('\\*s\\*', '/', tagValue)
+  searchSplit <- c()
+}
+# filtered works page
+if (length(urlSplit) == 5 & urlSplit[3] == 'works') {
+  tagValue <- c()
+  searchSplit <- strsplit(urlSplit[5], '&')[[1]]
+  searchSplit <- gsub('%5D', '', searchSplit)
+  searchSplit <- gsub('%5B', '', searchSplit)
+  searchSplit <- gsub('work_search', '', searchSplit)
+} 
+# filtered paginated tags
+if (length(urlSplit) == 6) {
+  tagValue <- gsub('%20', ' ', urlSplit[4])
+  tagValue <- gsub('\\*s\\*', '/', tagValue)
+
+  searchSplit <- strsplit(urlSplit[6], '&')[[1]]
+  if (length(searchSplit) == 1){
+    searchSplit <- c()
+  } else {
+    searchSplit <- gsub('%5D', '', searchSplit)
+    searchSplit <- gsub('%5B', '', searchSplit)
+    searchSplit <- gsub('work_search', '', searchSplit)
+  }
+}
+
+```
+
+Processing the parameters of the search request to look nicely.
+```{r searchParameters}
+
+#processing searchSplit into parameters
+searchParameters <- list('Bookmarks'          = gsub('bookmarks_count=', '',    searchSplit[grep('bookmarks_count=', searchSplit)]), 
+                         'Character names'    = gsub('character_names=', '',    searchSplit[grep('character_names=', searchSplit)]),
+                         'Comments count'     = gsub('comments_count=', '',     searchSplit[grep('comments_count=', searchSplit)]),
+                         'Complete'           = gsub('complete=', '',           searchSplit[grep('complete=', searchSplit)]),
+                         'Creators'           = gsub('creators=', '',           searchSplit[grep('creators=', searchSplit)]),
+                         'Crossover'          = gsub('crossover=', '',          searchSplit[grep('crossover=', searchSplit)]),
+                         'Fandom names'       = gsub('fandom_names=', '',       searchSplit[grep('fandom_names=', searchSplit)]),
+                         'Freeform names'     = gsub('freeform_names=', '',     searchSplit[grep('freeform_names=', searchSplit)]),
+                         'Hits'               = gsub('hits=', '',               searchSplit[grep('hits=', searchSplit)]),
+                         'Kudos count'        = gsub('kudos_count=', '',        searchSplit[grep('kudos_count=', searchSplit)]),
+                         'Language ID'        = gsub('language_id=', '',        searchSplit[grep('language_id=', searchSplit)]),
+                         'Query'              = gsub('query=', '',              searchSplit[grep('query=', searchSplit)]),
+                         'Rating IDs'         = gsub('rating_ids=', '',         searchSplit[grep('rating_ids=', searchSplit)]),
+                         'Relationship names' = gsub('relationship_names=', '', searchSplit[grep('relationship_names=', searchSplit)]),
+                         'Revised at'         = gsub('revised_at=', '',         searchSplit[grep('revised_at=', searchSplit)]),
+                         'Single chapter'     = gsub('single_chapter=', '',     searchSplit[grep('single_chapter=', searchSplit)]),
+                         'Sort column'        = gsub('sort_column=', '',        searchSplit[grep('sort_column=', searchSplit)]),
+                         'Sort direction'     = gsub('sort_direction=', '',     searchSplit[grep('sort_direction=', searchSplit)]),
+                         'Title'              = gsub('title=', '',              searchSplit[grep('title=', searchSplit)]),
+                         'Word Count'         = gsub('word_count=', '',         searchSplit[grep('word_count=', searchSplit)]) )
+
+#Single chapter parameter is weird, when it's ticked it gives both 0 and 1, so i set it to grab 1 only
+if (length(searchParameters$`Single chapter`) > 0) {
+  searchParameters$`Single chapter` <- as.character(max(as.numeric(searchParameters$`Single chapter`)))
+}
+
+#formatting special characters
+searchParameters<-lapply(searchParameters, 
+                         function(x){gsub(pattern = "\\+",
+                                          replacement = " ", x)})
+searchParameters<-lapply(searchParameters, 
+                         function(x){gsub(pattern = "%3E",
+                                          replacement = ">", x)})
+searchParameters<-lapply(searchParameters, 
+                         function(x){gsub(pattern = "%3C",
+                                          replacement = "<", x)})
+searchParameters<-lapply(searchParameters, 
+                         function(x){gsub(pattern = "%28",
+                                          replacement = "(", x)})
+searchParameters<-lapply(searchParameters, 
+                         function(x){gsub(pattern = "%29",
+                                          replacement = ")", x)})
+
+#getting rid of empty character vectors
+searchParameters[searchParameters == ''] <- lapply(searchParameters[searchParameters == ''],
+                                                   function(x){x = character(0)})
+
+rm(searchSplit, urlSplit)
+
+```
+
+Grabbing list of links with the search results
+```{r grabListOfLinks}
+
+#grabbing data from the first page
+#urlActive <- url(url, "rb")
+#firstPage <- read_html(urlActive)
+#close(urlActive)
+
+#grabbing pagination information
+pagination <- html_nodes(firstPage, '.pagination')
+
+#grabbing values of pages numbers
+pagesNumbers <- html_text(pagination)
+
+
+if (length(pagesNumbers) > 0) {
+  
+  #if there are pages, then determining the total number of pages
+  #suppresing warnings about string characters being turned into NAs
+  suppressWarnings( pagesNumbers <- as.numeric(strsplit(pagesNumbers, ' ')[[1]]) )
+  totalPages <- max(pagesNumbers[!is.na(pagesNumbers)])
+  
+  #grabbing elements with links from the top [1] pagination
+  paginationChildren <- html_nodes(pagination[1], 'a')
+  #selecting attribute 'href' corresponding to page's urls
+  linkList <- html_attr(paginationChildren, name='href')
+  #getting rid of repeat pages
+  linkList <- unique(linkList)
+  #making full urls out of the ones we got
+  linkList <- lapply('https://archiveofourown.org', paste0, linkList)[[1]]
+  
+  rm(firstPage, pagesNumbers, pagination, paginationChildren)
+  
+  if (length(linkList) < totalPages - 1 ) {
+    #if the number of links is less than the number of pages (because of ... in the middle)
+    pageString <- 'page='
+    #grab a formula prototype
+    formulaPrototype <- linkList[grepl(pageString, linkList)][1]
+    #determine the position of the page number in that string
+    pagePosition <- regexpr(pageString, formulaPrototype)[1]
+    #grab everything before that
+    cutStart <- substr(formulaPrototype, 1, pagePosition-1)
+    #grab everything after that
+    cutEnd <- substr(formulaPrototype, pagePosition+5, nchar(formulaPrototype))
+    #determine where the page number ends
+    endPosition <- regexpr('&', cutEnd)[1]
+    
+    if (endPosition == -1) {
+      #if it ends at the end of the url, then set CutEnd to empty string
+      cutEnd <- character(0)
+    } else {
+      #if the url string continues, grab everything after the number
+      cutEnd <- substr(cutEnd, endPosition, nchar(cutEnd))
+    }
+    
+    #combine the start of the string, page string, and the number of the string
+    linkList <- lapply(paste0(cutStart, pageString), paste0, c(1:totalPages))[[1]]
+    #then combine it with the end of string
+    linkList <- unlist(lapply(linkList, paste0, cutEnd))
+    
+    rm(pageString, formulaPrototype, pagePosition, cutStart, cutEnd, endPosition)
+    
+  } else {
+    #if the number of links is the same as the number of pages then add our url to it
+    linkList <- c(url, linkList)
+  }
+  
+} else {
+  #and linkList to our current url
+  linkList <- url
+  totalPages <- 1
+}
+
+
+```
+
+Grabbing data from the search page
+```{r processWorksData, message = FALSE}
+
+#creating a list for works data
+worksData <- list()
+
+for (linkCounter in 1:length(linkList)){
+  
+  #progress output
+  if (linkCounter %% 5 == 0) {
+    print(round(100*linkCounter/length(linkList)))
+  }
+  
+  #grabbing data from the page
+  readSuccess <- FALSE
+  
+  while(!readSuccess){
+    readSuccess <- TRUE
+    tryCatch(urlActive <- url(linkList[linkCounter], "rb"), 
+             error = function() {
+               readSuccess <- FALSE
+               Sys.sleep(60)
+             })
+  }
+  
+  searchPage <- read_html(urlActive)
+  close(urlActive)
+  #filtering for works descriptions
+  worksList <- html_nodes(searchPage, '.blurb')
+  
+  #looping through works on the page
+  for (i in 1:length(worksList)) {
+    
+    #grabbing title
+    titleTemp <- html_nodes(worksList[i], 'h4')
+    titleTemp <- html_nodes(titleTemp, 'a')
+    #filtering author
+    authorTemp <- html_text(titleTemp)[html_attr(titleTemp, 'rel') == 'author']
+    authorTemp <- authorTemp[!is.na(authorTemp)]
+    
+    #grabbing fandoms
+    fandomTemp <- html_nodes(worksList[i], '.fandoms')
+    fandomTemp <- html_text(html_nodes(fandomTemp, '.tag'))
+    
+    #filtering warnings
+    warningsTemp <- html_text(html_nodes(worksList[i], '.warnings'))
+    warningsTemp <- warningsTemp[warningsTemp == ""]
+    warningsTemp[warningsTemp == "Choose Not To Use Archive Warnings"] <- "Creator Chose Not To Use Archive Warnings"
+    
+    #grabbing the date of publication/last update
+    dateTemp <- html_text(html_nodes(worksList[i], '.datetime'))
+    dateTemp <- parse_date_time(as.character(dateTemp), orders="%d %b %y")
+    dateTemp <- as.Date(dateTemp)
+    
+    #processing tags to check if the works is meta/nonfiction
+    metaTemp <- html_text(html_nodes(html_nodes(worksList[i], '.tags'), 'a'))
+    metaTemp <- metaTemp[metaTemp == 'Meta' | metaTemp == 'Nonfiction']
+    
+    #grabbing work's stats
+    statsTemp <- html_nodes(worksList[i], 'dd')
+    chapterTemp <- strsplit(html_text(statsTemp[ html_attr(statsTemp, 'class') == 'chapters' ]), '/')[[1]]
+    
+    #putting data into a list
+    tempList <- list('Title' = html_text(titleTemp[1]),
+                     'Author' = authorTemp,
+                     'Fandom' = fandomTemp,
+                     'Rating' = unique(html_text(html_nodes(worksList[i], '.rating'))),
+                     'Warnings' = unique(warningsTemp),
+                     'Category' = strsplit(html_text(html_nodes(worksList[i], '.category')), ', ')[[1]],
+                     'Completion Status' = unique(html_text(html_nodes(worksList[i], '.iswip'))),
+                     'Date' = dateTemp,
+                     'Nonfiction' = metaTemp,
+                     'Relationships Count' = length(html_nodes(html_nodes(worksList[i], '.tags'), '.relationships')),
+                     'Character Count' = length(html_nodes(html_nodes(worksList[i], '.tags'), '.characters')),
+                     'Freeform Count' = length(html_nodes(html_nodes(worksList[i], '.tags'), '.freeforms')),
+                     'Language' = html_text(statsTemp[ html_attr(statsTemp, 'class') == 'language' ]),
+                     'Words' = as.numeric(gsub(',','',html_text(statsTemp[ html_attr(statsTemp, 'class') == 'words' ]))),
+                     'Chapters' = chapterTemp[1],
+                     'Chapters Total' = chapterTemp[2],
+                     'Kudos' = as.numeric(gsub(',','',html_text(statsTemp[ html_attr(statsTemp, 'class') == 'kudos' ]))),
+                     'Bookmarks' = as.numeric(gsub(',','',html_text(statsTemp[ html_attr(statsTemp, 'class') == 'bookmarks' ]))),
+                     'Hits' = as.numeric(gsub(',','',html_text(statsTemp[ html_attr(statsTemp, 'class') == 'hits' ]))) ) 
+    
+    #appending list to our workds data list
+    worksData <- append(worksData, list(tempList))
+    
+    #getting rid of all the temporary variables
+    rm(titleTemp, authorTemp, fandomTemp, warningsTemp, dateTemp, metaTemp, statsTemp, chapterTemp, tempList)
+  }
+
+}
+rm(worksList, i, linkCounter)
+
+#object.size(worksData)
+save(worksData, file='worksData.RData')
+
+#problem for searches which are too long:
+#https://httpstatuses.com/429
+
+```
