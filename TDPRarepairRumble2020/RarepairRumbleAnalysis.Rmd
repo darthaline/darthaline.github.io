@@ -8,9 +8,9 @@ output:
 ---
 
 # About
-This is a document detailing analysis of [TDP Rarepair Rumble 2020](https://tdp-shipping-dock.tumblr.com/rarepair-rumble) starting from Round 2CD. Event is hosted by Inga, who kindly gave me access to the resposes data.
+This is a document detailing analysis of [TDP Rarepair Rumble 2020](https://tdp-shipping-dock.tumblr.com/rarepair-rumble), starting from Round 2CD. Event is hosted by Inga, who kindly gave me access to the resposes data.
 
-```{r setup, collapse=TRUE}
+```{r setup, collapse=TRUE, echo=FALSE}
 # code chunks are collapsed:
 # https://stackoverflow.com/a/52589123/4819684
 
@@ -27,29 +27,29 @@ library("RColorBrewer") # for choosing colors
 
 ## Round 2CD
 
-In this round I didn't have direct information where did which individual response come from, so the source is based on estimation of when was the pool posted on each individual platform, as determined by the creation dates of the screenshots Inga provided.
+In this round I did't have information about where each individual response came from, so the source value is estimated based on the poll posting date on each individual platform. The dates were determined by the creation dates of the screenshots Inga provided.
 
 ```{r round2cdData, collapse=TRUE}
 data <- read.csv2 (file.path('data','Rarepair Rumble Round 2CD (Responses) - Form responses 1.csv'), header = TRUE, sep=',')
 data <- sapply(data, as.character)
-data[data == ''] <- "_don't want to vote"
-data[data == "I don't want to vote for either of these ships"] <- "_don't want to vote"
+data[data == ''] <- "_choose not to vote"
+data[data == "I don't want to vote for either of these ships"] <- "_choose not to vote"
 data <- data.frame(data)
 
-data$source <- 'discord'
-data[13:35,]$source <- 'tumblr&ao3'
-data[36:51,]$source <- 'twitter&reddit'
-data[52:69,]$source <- 'instagram'
+data$source <- 'Discord'
+data[13:35,]$source <- 'Tumblr & Ao3'
+data[36:51,]$source <- 'Twitter & Reddit'
+data[52:69,]$source <- 'Instagram'
 
 data$Timestamp <- parse_date_time2(as.character(data$Timestamp), orders = "%d/%m/%Y %H:%M:%S")
 data$day <- as.Date(data$Timestamp)
 
-custompalette <- brewer.pal(n=4, name = 'Dark2')
+custompalette <- brewer.pal(n=8, name = 'Dark2')
 #display.brewer.pal(name = 'Dark2', n=4)
 
 ```
 
-```{r round2cdPlots, collapse=TRUE, fig.width=12, fig.height=20}
+```{r plottingFunction, collapse=TRUE}
 
 plot_data_column <- function (data, column, legendPosition) {
     ggplot(data, aes_string(x = column)) + 
@@ -64,13 +64,124 @@ plot_data_column <- function (data, column, legendPosition) {
           legend.position = legendPosition)
 }
 
+```
+
+```{r round2cdPlotsSource, collapse=TRUE}
+
+sourceplot <- plot_data_column(data, colnames(data)[18], 'right') + 
+                       theme(legend.title=element_blank())
+mylegend <- get_legend(sourceplot)
+sourceplot
+
+```
+
+```{r round2cdPlots, collapse=TRUE, fig.width=12, fig.height=20}
 myplots <- lapply(colnames(data)[2:17], plot_data_column, data = data, legendPosition = 'none')
-mylegend <- get_legend(plot_data_column(data, colnames(data)[2], 'right') + 
-                       theme(legend.title=element_blank()))
 
 plot_grid(plot_grid(plotlist = myplots, align='hv'),
           plot_grid(plotlist = rep(list(mylegend),4), nrow=4, rel_heights = c(1,3,2,3)),
           rel_widths = c(4,1),
           align='hv')
+
+rm(data, mylegend, myplots)
+
+```
+
+## Round 3
+
+Round 3 and onwards included a question about where the poll was found, so we can take a precise look at each platform's preferences.
+
+```{r round3Data, collapse=TRUE}
+data <- read.csv2 (file.path('data','Rarepair Rumble Round 3.csv'), header = TRUE, sep=',')
+data <- sapply(data, as.character)
+data[,'Where.did.you.find.the.link.to.this.round.'][data[,'Where.did.you.find.the.link.to.this.round.'] == '']<- "No Source Provided"
+data[data == "I don't want to vote for either of these ships"] <- "_choose not to vote"
+data[data == ""] <- "_choose not to vote"
+data[data == "Didn't see it on reddit so searched for it on Tumblr"] <- "Tumblr"
+data <- data.frame(data)
+
+titles <- colnames(data)
+titles[titles == "Where.did.you.find.the.link.to.this.round."] <- "source"
+titles <- sub("X.", "", titles)
+titles <- sub("[[:digit:]]", "", titles)
+titles <- sub("[[:digit:]]", "", titles)
+titles <- sub(".vs.", "_vs_", titles)
+titles <- sub("[[:punct:]]", "", titles)
+titles <- sub("[[:punct:]]", "", titles)
+
+colnames(data)<- titles
+
+#data$Timestamp <- parse_date_time2(as.character(data$Timestamp), orders = "%d/%m/%Y %H:%M:%S")
+
+rm(titles)
+
+```
+
+```{r round3PlotsSource, collapse=TRUE}
+
+sourceplot <- plot_data_column(data, colnames(data)[2], 'right') + 
+                       theme(legend.title=element_blank())
+mylegend <- get_legend(sourceplot)
+sourceplot
+
+```
+
+```{r round3Plots, collapse=TRUE, fig.width=12, fig.height=20}
+
+myplots <- lapply(colnames(data)[3:18], plot_data_column, data = data, legendPosition = 'none')
+
+plot_grid(plot_grid(plotlist = myplots, align='hv'),
+          plot_grid(plotlist = rep(list(mylegend),4), nrow=4, rel_heights = c(1,3,2,3)),
+          rel_widths = c(4,1),
+          align='hv')
+
+rm(data, sourceplot, mylegend, myplots)
+
+```
+
+## Round 4
+
+```{r round4Data, collapse=TRUE}
+data <- read.csv2 (file.path('data','Rarepair Rumble Round 4.csv'), header = TRUE, sep=',')
+data <- sapply(data, as.character)
+data[,'Where.did.you.find.the.link.to.this.round.'][data[,'Where.did.you.find.the.link.to.this.round.'] == '']<- "No Source Provided"
+data[data == "I don't want to vote for either of these ships"] <- "_choose not to vote"
+data[data == ""] <- "_choose not to vote"
+data <- data.frame(data)
+
+titles <- colnames(data)
+titles[titles == "Where.did.you.find.the.link.to.this.round."] <- "source"
+titles <- sub("X.", "", titles)
+titles <- sub("[[:digit:]]", "", titles)
+titles <- sub("[[:digit:]]", "", titles)
+titles <- sub(".vs.", "_vs_", titles)
+titles <- sub("[[:punct:]]", "", titles)
+titles <- sub("[[:punct:]]", "", titles)
+
+colnames(data)<- titles
+
+# rm(titles)
+
+```
+
+```{r round4PlotsSource, collapse=TRUE}
+
+sourceplot <- plot_data_column(data, colnames(data)[2], 'right') + 
+                       theme(legend.title=element_blank())
+mylegend <- get_legend(sourceplot)
+sourceplot
+
+```
+
+```{r round4Plots, collapse=TRUE, fig.width=10, fig.height=15}
+
+myplots <- lapply(colnames(data)[3:10], plot_data_column, data = data, legendPosition = 'none')
+
+plot_grid(plot_grid(plotlist = myplots, align='hv'),
+          plot_grid(plotlist = rep(list(mylegend),3), nrow=3, rel_heights = c(1,2,2)),
+          rel_widths = c(4,1),
+          align='hv')
+
+#rm(data, sourceplot, mylegend, myplots)
 
 ```
