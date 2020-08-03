@@ -5,10 +5,11 @@ date: "3 Aug 2020"
 output:
   html_notebook:
     code_folding: "hide"
+    toc: true
 ---
 
 # About
-This is a document detailing analysis of [TDP Rarepair Rumble 2020](https://tdp-shipping-dock.tumblr.com/rarepair-rumble), starting from Round 2CD. Event is hosted by Inga, who kindly gave me access to the resposes data.
+This is a document detailing analysis of [TDP Rarepair Rumble 2020](https://tdp-shipping-dock.tumblr.com/rarepair-rumble), starting from Round 2CD. This event is hosted by Inga, who kindly gave me access to the resposes data.
 
 ```{r setup, collapse=TRUE, echo=FALSE}
 # code chunks are collapsed:
@@ -22,6 +23,9 @@ library("lubridate") # for handling dates
 library('ggplot2') # for plotting
 library('cowplot') # for plotting
 library("RColorBrewer") # for choosing colors
+
+custompalette <- brewer.pal(n=8, name = 'Dark2')
+#display.brewer.pal(name = 'Dark2', n=4)
 
 ```
 
@@ -44,9 +48,6 @@ data[52:69,]$source <- 'Instagram'
 data$Timestamp <- parse_date_time2(as.character(data$Timestamp), orders = "%d/%m/%Y %H:%M:%S")
 data$day <- as.Date(data$Timestamp)
 
-custompalette <- brewer.pal(n=8, name = 'Dark2')
-#display.brewer.pal(name = 'Dark2', n=4)
-
 ```
 
 ```{r plottingFunction, collapse=TRUE}
@@ -64,7 +65,26 @@ plot_data_column <- function (data, column, legendPosition) {
           legend.position = legendPosition)
 }
 
+plot_data_column_title <- function (data, column, legendPosition) {
+    ggplot(data, aes_string(x = column)) + 
+    geom_bar(aes(col=source, fill=source), alpha = 0.5)+
+    scale_colour_manual(values = custompalette)+
+    scale_fill_manual(values = custompalette) +
+    scale_y_continuous(limits=c(0,60))+
+    theme_half_open() +
+    background_grid() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+          axis.title.y=element_blank(),
+          axis.title.x=element_blank(),
+          legend.position = legendPosition)+
+    ggtitle(gsub('\\.', ' ', column))
+}
+
 ```
+
+### Distribution of platforms
+
+Below is the distribution of answers from the platforms, but due to indirect method of measurement it should be taken with a grain of salt.
 
 ```{r round2cdPlotsSource, collapse=TRUE}
 
@@ -74,6 +94,8 @@ mylegend <- get_legend(sourceplot)
 sourceplot
 
 ```
+
+### Votes result
 
 ```{r round2cdPlots, collapse=TRUE, fig.width=12, fig.height=20}
 myplots <- lapply(colnames(data)[2:17], plot_data_column, data = data, legendPosition = 'none')
@@ -117,6 +139,8 @@ rm(titles)
 
 ```
 
+### Distribution of platforms
+
 ```{r round3PlotsSource, collapse=TRUE}
 
 sourceplot <- plot_data_column(data, colnames(data)[2], 'right') + 
@@ -125,6 +149,8 @@ mylegend <- get_legend(sourceplot)
 sourceplot
 
 ```
+
+### Votes result
 
 ```{r round3Plots, collapse=TRUE, fig.width=12, fig.height=20}
 
@@ -160,9 +186,11 @@ titles <- sub("[[:punct:]]", "", titles)
 
 colnames(data)<- titles
 
-# rm(titles)
+rm(titles)
 
 ```
+
+### Distribution of platforms
 
 ```{r round4PlotsSource, collapse=TRUE}
 
@@ -173,6 +201,8 @@ sourceplot
 
 ```
 
+### Votes result
+
 ```{r round4Plots, collapse=TRUE, fig.width=10, fig.height=15}
 
 myplots <- lapply(colnames(data)[3:10], plot_data_column, data = data, legendPosition = 'none')
@@ -182,6 +212,105 @@ plot_grid(plot_grid(plotlist = myplots, align='hv'),
           rel_widths = c(4,1),
           align='hv')
 
-#rm(data, sourceplot, mylegend, myplots)
+rm(data, sourceplot, mylegend, myplots)
 
 ```
+
+## Round 5
+
+```{r round5Data, collapse=TRUE}
+data <- read.csv2 (file.path('data','RarePair Rumble Quarterfinal! (round 5).csv'), header = TRUE, sep=',')
+dataActive <- data[2:10]
+data <- data[c(1,2,11:14)]
+data <- sapply(data, as.character)
+data[,'Where.did.you.find.the.link.to.this.round.'][data[,'Where.did.you.find.the.link.to.this.round.'] == '']<- "No Source Provided"
+data[data == "I don't want to vote for either of these ships"] <- "_choose not to vote"
+data[data == ""] <- "_choose not to vote"
+data <- data.frame(data)
+
+titles <- colnames(data)
+titles[titles == "Where.did.you.find.the.link.to.this.round."] <- "source"
+titles <- sub("X.", "", titles)
+titles <- sub("[[:digit:]]", "", titles)
+titles <- sub("[[:digit:]]", "", titles)
+titles <- sub(".vs.", "_vs_", titles)
+titles <- sub("[[:punct:]]", "", titles)
+titles <- sub("[[:punct:]]", "", titles)
+
+colnames(data)<- titles
+
+rm(titles)
+
+```
+
+```{r round5ActiveShippingData}
+
+dataActive <- sapply(dataActive, as.character)
+dataActive[,'Where.did.you.find.the.link.to.this.round.'][dataActive[,'Where.did.you.find.the.link.to.this.round.'] == '']<- "No Source Provided"
+titles <- c("source",
+            "Claudia x Callum",
+            "Ezran x Aanya",
+            "Corvus x Opeli",
+            "Gren x Kazi",
+            "Claudia x Aaravos",
+            "Marcos x Crow Master",
+            "Sabah x Marcos",
+            "Gren x Amaya")
+colnames(dataActive) <- titles
+
+dataActive[dataActive == ""] <- "_choose not to vote"
+dataActive <- data.frame(dataActive)
+
+rm(titles)
+
+```
+
+### Distribution of platforms
+
+```{r round5PlotsSource, collapse=TRUE}
+
+sourceplot <- plot_data_column(data, colnames(data)[2], 'right') + 
+                       theme(legend.title=element_blank())
+mylegend <- get_legend(sourceplot)
+sourceplot
+
+```
+
+### Active shipping preferences
+
+This round included a new kind of question, where people could indicate their preferences with regards to competing ships.
+
+Most ships included here have a relatively small number of "active shippers", compared to those who those who simply "like" the idea of them together.
+
+It's worth noting that "Crowcos (Marcos x Crow Master)" got the majority of votes in "no opinions" category, indicating, that, perhaps, it got to the top due to strong dislike of voters for ships competing against it, rather than its individual appeal.
+
+Interestingly, "Clarvos (Claudia x Aaravos)", which competed against "Crowcos (Marcos x Crow Master)" in this round, has majority of votes allocated towards "dislike" category. Despite that, it won with a margin of approximately 10 votes - most likely thanks to it's active shippers, and a relatively high number of people who chose not to vote for either.
+
+
+```{r round5ActiveShippingPlots, fig.width=10, fig.height=15}
+
+myplots <- lapply(colnames(dataActive)[2:9], plot_data_column_title, data = dataActive, legendPosition = 'none')
+
+plot_grid(plot_grid(plotlist = myplots, align='hv'),
+          plot_grid(plotlist = rep(list(mylegend),3), nrow=3, rel_heights = c(2,3,2)),
+          rel_widths = c(3,1),
+          align='hv')
+
+#rm(dataActive, myplots)
+
+```
+
+### Votes result
+
+```{r round5Plots}
+
+myplots <- lapply(colnames(data)[3:6], plot_data_column, data = data, legendPosition = 'none')
+
+plot_grid(plot_grid(plotlist = myplots, align='h', nrow=1),
+          mylegend,
+          rel_widths = c(3,1))
+
+rm(sourceplot, mylegend, myplots, data)
+
+```
+
