@@ -218,7 +218,7 @@ Small cheat: all the numbers on the Y axis are increased by one to include the c
 ```{r percentiles, message = FALSE}
 total <- 1000
 percentile <- c(1:total)
-percentileData <- data.frame('works percentile' = 100*(total - percentile)/total,
+percentileData <- data.frame(works.percentile = 100*(total - percentile)/total,
                              words = unlist(lapply(percentile/total, quantile, x = unlist(words))) + 1,
                              hits = unlist(lapply(percentile/total, quantile, x = unlist(hits))) + 1,
                              kudos = unlist(lapply(percentile/total, quantile, x = unlist(kudos))) + 1,
@@ -236,11 +236,11 @@ percentileData <- data.frame('works percentile' = 100*(total - percentile)/total
 #                        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 # plotPercentiles
 
-wordsPercentiles <- plot_percentiles(percentileData, 'works percentile', 'words', 'right')
-hitsPercentiles <- plot_percentiles(percentileData, 'works percentile', 'hits', 'right')
-kudosPercentiles <- plot_percentiles(percentileData, 'works percentile', 'kudos', 'right')
-commentsPercentiles <- plot_percentiles(percentileData, 'works percentile', 'comments', 'right')
-bookmarksPercentiles <- plot_percentiles(percentileData, 'works percentile', 'bookmarks', 'right')
+wordsPercentiles <- plot_percentiles(percentileData, 'works.percentile', 'words', 'right')
+hitsPercentiles <- plot_percentiles(percentileData, 'works.percentile', 'hits', 'right')
+kudosPercentiles <- plot_percentiles(percentileData, 'works.percentile', 'kudos', 'right')
+commentsPercentiles <- plot_percentiles(percentileData, 'works.percentile', 'comments', 'right')
+bookmarksPercentiles <- plot_percentiles(percentileData, 'works.percentile', 'bookmarks', 'right')
 
 plot_grid(wordsPercentiles + theme(legend.position="none"),
           hitsPercentiles + theme(legend.position="none"),
