@@ -402,8 +402,8 @@ for (linkCounter in 1:length(linkList)){
     dateTemp <- as.Date(dateTemp)
     
     #processing tags to check if the works is meta/nonfiction
-    metaTemp <- html_text(html_nodes(html_nodes(worksList[i], '.tags'), 'a'))
-    metaTemp <- metaTemp[metaTemp == 'Meta' | metaTemp == 'Nonfiction']
+    #metaTemp <- html_text(html_nodes(html_nodes(worksList[i], '.tags'), 'a'))
+    #metaTemp <- metaTemp[metaTemp == 'Meta' | metaTemp == 'Nonfiction']
     
     #grabbing work's stats
     statsTemp <- html_nodes(worksList[i], 'dd')
@@ -418,7 +418,7 @@ for (linkCounter in 1:length(linkList)){
                      'Category' = strsplit(html_text(html_nodes(worksList[i], '.category')), ', ')[[1]],
                      'WIP' = unique(html_text(html_nodes(worksList[i], '.iswip'))),
                      'Date' = dateTemp,
-                     'Nonfiction' = metaTemp,
+                     #'Nonfiction' = metaTemp,
                      'Relationships' = html_text(html_nodes(html_nodes(worksList[i], '.tags'), '.relationships')),
                      'Character' = html_text(html_nodes(html_nodes(worksList[i], '.tags'), '.characters')),
                      'Freeform' = html_text(html_nodes(html_nodes(worksList[i], '.tags'), '.freeforms')),
@@ -426,6 +426,7 @@ for (linkCounter in 1:length(linkList)){
                      'Words' = as.numeric(gsub(',','',html_text(statsTemp[ html_attr(statsTemp, 'class') == 'words' ]))),
                      'Chapters' = chapterTemp[1],
                      'Chapters Total' = chapterTemp[2],
+                     'Comments' = as.numeric(gsub(',','',html_text(statsTemp[ html_attr(statsTemp, 'class') == 'comments' ]))),
                      'Kudos' = as.numeric(gsub(',','',html_text(statsTemp[ html_attr(statsTemp, 'class') == 'kudos' ]))),
                      'Bookmarks' = as.numeric(gsub(',','',html_text(statsTemp[ html_attr(statsTemp, 'class') == 'bookmarks' ]))),
                      'Hits' = as.numeric(gsub(',','',html_text(statsTemp[ html_attr(statsTemp, 'class') == 'hits' ]))) ) 
@@ -434,7 +435,7 @@ for (linkCounter in 1:length(linkList)){
     worksData <- append(worksData, list(tempList))
     
     #getting rid of all the temporary variables
-    rm(titleTemp, authorTemp, fandomTemp, warningsTemp, dateTemp, metaTemp, statsTemp, chapterTemp, tempList)
+    rm(titleTemp, authorTemp, fandomTemp, warningsTemp, dateTemp, statsTemp, chapterTemp, tempList)
   }
 
 }

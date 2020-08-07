@@ -1,11 +1,13 @@
 ---
 title: "TDP data processing"
+author: "darthaline"
+date: "7 Aug 2020"
 output:
   html_notebook:
     code_folding: "hide"
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+This is a document detailing analysis of "The Dragon Prince" Ao3 tag data.
 
 ```{r setup, message = FALSE}
 #library("rstudioapi") #to grab local position of the script
@@ -22,6 +24,44 @@ library('cowplot') # for plotting
 load('worksData_TDP.RData')
 ```
 
+
+```{r plottingFunctions, collapse=TRUE}
+
+plot_density <- function (data, column, color_column, legendPosition) {
+    ggplot(data, aes_string(x = column, col=color_column)) + 
+    geom_density(alpha = 0.1)+
+    scale_x_log10()+
+    theme_half_open() +
+    background_grid() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+          legend.position = legendPosition)
+}
+
+plot_points <- function (data, columnX, columnY, color_column, legendPosition) {
+    ggplot(data, aes_string(x = columnX, y = columnY, col=color_column)) + 
+    geom_point(alpha=0.3)+
+    scale_x_log10()+
+    scale_y_log10()+
+    facet_wrap(color_column)+
+    theme_half_open() +
+    background_grid() +
+    theme(legend.title=element_blank(),
+          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+}
+
+plot_percentiles <- function (data, columnX, columnY, legendPosition) {
+    ggplot(data, aes_string(x = columnX, y = columnY)) + 
+    geom_point(alpha=0.3)+
+    scale_y_log10(breaks = 10^c(0:15))+
+    scale_x_continuous(breaks = c(0, 25, 50, 75, 100))+ #scale_x_continuous(breaks = c(0:10)*10)+
+    theme_half_open() +
+    background_grid() +
+    theme(legend.title=element_blank())
+}
+
+
+```
+
 ```{r flatteningData, message = FALSE}
 title <- lapply(worksData, function(x) {x$Title})
 author <- lapply(worksData, function(x) {x$Author})
@@ -31,20 +71,18 @@ warnings <- lapply(worksData, function(x) {x$Warnings})
 category <- lapply(worksData, function(x) {x$Category})
 WIP <- lapply(worksData, function(x) {x$WIP})
 date <-lapply(worksData, function(x) {x$Date})
-nonfiction <-lapply(worksData, function(x) {x$Nonfiction})
 relationships <-lapply(worksData, function(x) {x$Relationships})
 character <-lapply(worksData, function(x) {x$Character})
 freeform <-lapply(worksData, function(x) {x$Freeform})
 language <-lapply(worksData, function(x) {x$Language})
 words <-lapply(worksData, function(x) {x$Words})
 kudos <-lapply(worksData, function(x) {x$Kudos})
+comments <-lapply(worksData, function(x) {x$Comments})
 bookmarks<-lapply(worksData, function(x) {x$Bookmarks})
 hits <-lapply(worksData, function(x) {x$Hits})
-```
-
-```{r statsDensitiesWIP, message = FALSE}
 
 stats <- data.frame(words = unlist(words, recursive = FALSE),
+                    comments= as.numeric(as.character(comments)),
                     kudos = as.numeric(as.character(kudos)),
                     bookmarks = as.numeric(as.character(bookmarks)),
                     hits = as.numeric(as.character(hits)),
@@ -53,154 +91,166 @@ stats <- data.frame(words = unlist(words, recursive = FALSE),
 
 stats$rating <- factor(stats$rating, levels = c("Not Rated", "General Audiences", "Teen And Up Audiences", "Mature", "Explicit"))
 
-kudosDensityWIP<- ggplot(stats, aes(x=kudos, col=WIP)) +
-  geom_density()+
-  scale_x_log10()+
-  theme_half_open() +
-  background_grid() +
-  theme()
+```
 
-bookmarksDensityWIP<- ggplot(stats, aes(x=bookmarks, col=WIP)) +
-  geom_density()+
-  scale_x_log10()+
-  theme_half_open() +
-  background_grid() +
-  theme(legend.position="none")
+```{r totalWorksWIP, message = FALSE}
 
-hitsDensityWIP<- ggplot(stats, aes(x=hits, col=WIP)) +
-  geom_density()+
-  scale_x_log10()+
-  theme_half_open() +
-  background_grid() +
-  theme(legend.position="none",
-        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+barWorksWIP <- ggplot(stats, aes(x = WIP, fill=WIP)) + 
+    geom_bar(alpha=1)+
+    theme_half_open() +
+    background_grid() +
+    theme(legend.title=element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+barWorksWIP
 
-wordsDensityWIP<- ggplot(stats, aes(x=words, col=WIP)) +
-  geom_density()+
-  scale_x_log10()+
-  theme_half_open() +
-  background_grid() +
-  theme(legend.position="none",
-        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+barWordsWIP <- ggplot(stats, aes(x = WIP, y=words, fill=WIP)) + 
+    geom_col(alpha=1)+
+    theme_half_open() +
+    background_grid() +
+    theme(legend.title=element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+barWordsWIP
 
-plot_grid(kudosDensityWIP + theme(legend.position="none"),
-          bookmarksDensityWIP,
-          hitsDensityWIP,
-          wordsDensityWIP,
+rm(barWorksWIP, barWordsWIP)
+```
+
+
+```{r statsDensitiesWIP, message = FALSE}
+
+wordsDensityWIP <- plot_density(stats, 'words', 'WIP', 'right')
+hitsDensityWIP <- plot_density(stats, 'hits', 'WIP', 'right')
+kudosDensityWIP <- plot_density(stats, 'kudos', 'WIP', 'right')
+commentsDensityWIP <- plot_density(stats, 'comments', 'WIP', 'right')
+bookmarksDensityWIP <- plot_density(stats, 'bookmarks', 'WIP', 'right')
+  
+plot_grid(wordsDensityWIP + theme(legend.position="none"),
+          hitsDensityWIP + theme(legend.position="none"),
+          kudosDensityWIP + theme(legend.position="none"),
+          commentsDensityWIP + theme(legend.position="none"),
+          bookmarksDensityWIP + theme(legend.position="none"),
           get_legend(kudosDensityWIP +
                      theme(legend.title=element_blank())))
+
+rm(wordsDensityWIP, hitsDensityWIP, kudosDensityWIP, commentsDensityWIP, bookmarksDensityWIP)
 ```
 
 ```{r statsWordsWIP, message = FALSE}
-wordsKudosWIP <- ggplot(stats, aes(x=words, y=kudos, col=WIP))+
-  geom_point(alpha=0.3)+
-  scale_x_log10()+
-  scale_y_log10()+
-  facet_grid(.~WIP)+
-  theme_half_open() +
-  background_grid() +
-  theme(legend.title=element_blank(),
-        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+wordsHitsWIP <- plot_points(stats, 'words', 'hits', 'WIP', 'right')
+wordsHitsWIP
+wordsKudosWIP <- plot_points(stats, 'words', 'kudos', 'WIP', 'right')
 wordsKudosWIP
-
-wordsBookmarksWIP <- ggplot(stats, aes(x=words, y=bookmarks, col=WIP))+
-  geom_point(alpha=0.3)+
-  scale_x_log10()+
-  scale_y_log10()+
-  facet_grid(.~WIP)+
-  theme_half_open() +
-  background_grid() +
-  theme(legend.title=element_blank(),
-        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+wordsCommentsWIP <- plot_points(stats, 'words', 'comments', 'WIP', 'right')
+wordsCommentsWIP
+wordsBookmarksWIP <- plot_points(stats, 'words', 'bookmarks', 'WIP', 'right')
 wordsBookmarksWIP
 
-wordsHitsWIP <- ggplot(stats, aes(x=words, y=hits, col=WIP))+
-  geom_point(alpha=0.3)+
-  scale_x_log10()+
-  scale_y_log10()+
-  facet_grid(.~WIP)+
-  theme_half_open() +
-  background_grid() +
-  theme(legend.title=element_blank(),
-        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-wordsHitsWIP
-
+rm(wordsHitsWIP, wordsKudosWIP, wordsCommentsWIP, wordsBookmarksWIP)
 ```
 
+```{r totalWorksRating, message = FALSE}
+
+barWorksRating <- ggplot(stats, aes(x = rating, fill=rating)) + 
+    geom_bar(alpha=1)+
+    theme_half_open() +
+    background_grid() +
+    theme(legend.title=element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+barWorksRating
+
+barWordsRating <- ggplot(stats, aes(x = rating, y=words, fill=rating)) + 
+    geom_col(alpha=1)+
+    theme_half_open() +
+    background_grid() +
+    theme(legend.title=element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+barWordsRating
+
+rm(barWorksRating, barWordsRating)
+```
 
 ```{r statsDensitiesRating, message = FALSE}
+wordsDensityRating <- plot_density(stats, 'words', 'rating', 'right')
+hitsDensityRating <- plot_density(stats, 'hits', 'rating', 'right')
+kudosDensityRating <- plot_density(stats, 'kudos', 'rating', 'right')
+commentsDensityRating <- plot_density(stats, 'comments', 'rating', 'right')
+bookmarksDensityRating <- plot_density(stats, 'bookmarks', 'rating', 'right')
 
-kudosDensityRating<- ggplot(stats, aes(x=kudos, col=rating)) +
-  geom_density()+
-  scale_x_log10()+
-  theme_half_open() +
-  background_grid() +
-  theme()
-
-bookmarksDensityRating<- ggplot(stats, aes(x=bookmarks, col=rating)) +
-  geom_density()+
-  scale_x_log10()+
-  theme_half_open() +
-  background_grid() +
-  theme(legend.position="none")
-
-hitsDensityRating<- ggplot(stats, aes(x=hits, col=rating)) +
-  geom_density()+
-  scale_x_log10()+
-  theme_half_open() +
-  background_grid() +
-  theme(legend.position="none",
-        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
-wordsDensityRating<- ggplot(stats, aes(x=words, col=rating)) +
-  geom_density()+
-  scale_x_log10()+
-  theme_half_open() +
-  background_grid() +
-  theme(legend.position="none",
-        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
-plot_grid(kudosDensityRating + theme(legend.position="none"),
-          bookmarksDensityRating,
-          hitsDensityRating,
-          wordsDensityRating,
+plot_grid(wordsDensityRating + theme(legend.position="none"),
+          hitsDensityRating + theme(legend.position="none"),
+          kudosDensityRating + theme(legend.position="none"),
+          commentsDensityRating + theme(legend.position="none"),
+          bookmarksDensityRating + theme(legend.position="none"),
           get_legend(kudosDensityRating +
                      theme(legend.title=element_blank())))
+
+rm(wordsDensityRating, hitsDensityRating, kudosDensityRating, commentsDensityRating, bookmarksDensityRating)
 ```
 
 
-```{r statsWordsRating, message = FALSE, fig.width=13, fig.height=5}
-wordsKudosRating <- ggplot(stats, aes(x=words, y=kudos, col=rating))+
-  geom_point(alpha=0.3)+
-  scale_x_log10()+
-  scale_y_log10()+
-  facet_grid(.~rating)+
-  theme_half_open() +
-  background_grid() +
-  theme(legend.title=element_blank(),
-        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```{r statsWordsRating, message = FALSE}
+wordsHitsRating <- plot_points(stats, 'words', 'hits', 'rating', 'right')
+wordsHitsRating
+wordsKudosRating <- plot_points(stats, 'words', 'kudos', 'rating', 'right')
 wordsKudosRating
-
-wordsBookmarksRating <- ggplot(stats, aes(x=words, y=bookmarks, col=rating))+
-  geom_point(alpha=0.3)+
-  scale_x_log10()+
-  scale_y_log10()+
-  facet_grid(.~rating)+
-  theme_half_open() +
-  background_grid() +
-  theme(legend.title=element_blank(),
-        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+wordsCommentsRating <- plot_points(stats, 'words', 'comments', 'rating', 'right')
+wordsCommentsRating
+wordsBookmarksRating <- plot_points(stats, 'words', 'bookmarks', 'rating', 'right')
 wordsBookmarksRating
 
-wordsHitsRating <- ggplot(stats, aes(x=words, y=hits, col=rating))+
-  geom_point(alpha=0.3)+
-  scale_x_log10()+
-  scale_y_log10()+
-  facet_grid(.~rating)+
-  theme_half_open() +
-  background_grid() +
-  theme(legend.title=element_blank(),
-        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-wordsHitsRating
+rm(wordsHitsRating, wordsKudosRating, wordsCommentsRating, wordsBookmarksRating)
+
+```
+
+Small cheat: all the numbers on the Y axis are increased by one to include the case of 0 into the plot (otherwise excluded because of log scale)
+
+* About 75% of works have more than a 1000 words
+* Only about 25% of works have over a 1000 hits
+* Only about 25% of works have more than a 100 kudos
+* Only about 50% of works get more than 10 comments
+* Approximately 10% of works have no comments (tail end)
+* Only approximately 25% of works get more than 10 bookmarks
+* Approximately 20% of works have no bookmarks (tail end)
+
+```{r percentiles, message = FALSE}
+total <- 1000
+percentile <- c(1:total)
+percentileData <- data.frame('works percentile' = 100*(total - percentile)/total,
+                             words = unlist(lapply(percentile/total, quantile, x = unlist(words))) + 1,
+                             hits = unlist(lapply(percentile/total, quantile, x = unlist(hits))) + 1,
+                             kudos = unlist(lapply(percentile/total, quantile, x = unlist(kudos))) + 1,
+                             comments = unlist(lapply(percentile/total, quantile, x = unlist(comments))) + 1,
+                             bookmarks = unlist(lapply(percentile/total, quantile, x = unlist(bookmarks))) + 1 )
+
+
+# plotPercentiles <- ggplot(percentileData, aes(x = percentile, y = bookmarks)) + 
+#                  geom_point(alpha=0.3)+
+#                  scale_y_log10(breaks = 10^c(0:10))+
+#                  scale_x_continuous(breaks = c(0:10)*10)+
+#                  theme_half_open() +
+#                  background_grid() +
+#                  theme(legend.title=element_blank(),
+#                        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+# plotPercentiles
+
+wordsPercentiles <- plot_percentiles(percentileData, 'works percentile', 'words', 'right')
+hitsPercentiles <- plot_percentiles(percentileData, 'works percentile', 'hits', 'right')
+kudosPercentiles <- plot_percentiles(percentileData, 'works percentile', 'kudos', 'right')
+commentsPercentiles <- plot_percentiles(percentileData, 'works percentile', 'comments', 'right')
+bookmarksPercentiles <- plot_percentiles(percentileData, 'works percentile', 'bookmarks', 'right')
+
+plot_grid(wordsPercentiles + theme(legend.position="none"),
+          hitsPercentiles + theme(legend.position="none"),
+          kudosPercentiles + theme(legend.position="none"),
+          commentsPercentiles + theme(legend.position="none"),
+          bookmarksPercentiles + theme(legend.position="none"),
+          get_legend(kudosPercentiles +
+                     theme(legend.title=element_blank())))
+
+#multipleFandoms <- fandom[unlist(lapply(fandom, length)) > 1]
+#crossovers <- fandom[grep('crossover',freeform, ignore.case=TRUE)]
 
 ```
