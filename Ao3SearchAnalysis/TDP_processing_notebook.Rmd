@@ -5,27 +5,68 @@ date: "7 Aug 2020"
 output:
   html_notebook:
     code_folding: "hide"
+    toc: true
 ---
 
-This is a document detailing analysis of "The Dragon Prince" Ao3 tag data.
+# About
 
-```{r setup, message = FALSE}
+```{r setup, message = FALSE, warning=FALSE}
 #library("rstudioapi") #to grab local position of the script
 #setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 knitr::opts_knit$set(root.dir = '.')
 
 #library("rvest") # to handle html stuff
 
-library("lubridate") # to handle dates
+library(lubridate) # to handle dates
 
-library('ggplot2') # for plotting
-library('cowplot') # for plotting
+library(ggplot2) # for plotting
+library(cowplot) # for plotting
+
+library(knitr) # for tables
+library(kableExtra) # for tables
 
 load('worksData_TDP.RData')
 ```
 
+This is a document detailing analysis of `r tagValue` Ao3 tag data, collected on the 7 Aug 2020.
 
-```{r plottingFunctions, collapse=TRUE}
+```{r plottingFunctions, collapse=TRUE, warning=FALSE}
+
+plot_bar <- function (data, columnX, legendPosition) {
+    ggplot(data, aes_string(x = columnX)) + 
+    geom_bar(alpha=1)+
+    theme_half_open() +
+    background_grid() +
+    theme(legend.title=element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+    labs(y="Number of works")
+}
+
+plot_col <- function (data, columnX, columnY, legendPosition) {
+    ggplot(data, aes_string(x = columnX, y = columnY)) + 
+    geom_col(alpha=1)+
+    theme_half_open() +
+    background_grid() +
+    theme(legend.title=element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+    labs(y=gsub('\\.', ' ', columnY))
+  
+}
+
+plot_percentiles <- function (data, columnX, columnY, legendPosition) {
+    ggplot(data, aes_string(x = columnX, y = columnY)) + 
+    geom_point(alpha=0.3)+
+    scale_y_log10(breaks = 10^c(0:15))+
+    scale_x_continuous(breaks = c(0, 25, 50, 75, 100))+ #scale_x_continuous(breaks = c(0:10)*10)+
+    theme_half_open() +
+    background_grid() +
+    theme(legend.title=element_blank())+
+    labs(x=gsub('\\.', ' ', columnX))
+}
+
+
 
 plot_density <- function (data, column, color_column, legendPosition) {
     ggplot(data, aes_string(x = column, col=color_column)) + 
@@ -49,20 +90,9 @@ plot_points <- function (data, columnX, columnY, color_column, legendPosition) {
           axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 }
 
-plot_percentiles <- function (data, columnX, columnY, legendPosition) {
-    ggplot(data, aes_string(x = columnX, y = columnY)) + 
-    geom_point(alpha=0.3)+
-    scale_y_log10(breaks = 10^c(0:15))+
-    scale_x_continuous(breaks = c(0, 25, 50, 75, 100))+ #scale_x_continuous(breaks = c(0:10)*10)+
-    theme_half_open() +
-    background_grid() +
-    theme(legend.title=element_blank())
-}
-
-
 ```
 
-```{r flatteningData, message = FALSE}
+```{r flatteningData, message = FALSE, warning=FALSE}
 title <- lapply(worksData, function(x) {x$Title})
 author <- lapply(worksData, function(x) {x$Author})
 fandom <- lapply(worksData, function(x) {x$Fandom})
@@ -81,49 +111,73 @@ comments <-lapply(worksData, function(x) {x$Comments})
 bookmarks<-lapply(worksData, function(x) {x$Bookmarks})
 hits <-lapply(worksData, function(x) {x$Hits})
 
-stats <- data.frame(words = unlist(words, recursive = FALSE),
-                    comments= as.numeric(as.character(comments)),
-                    kudos = as.numeric(as.character(kudos)),
-                    bookmarks = as.numeric(as.character(bookmarks)),
-                    hits = as.numeric(as.character(hits)),
+stats <- data.frame(Words = unlist(words, recursive = FALSE),
+                    Comments= as.numeric(as.character(comments)),
+                    Kudos = as.numeric(as.character(kudos)),
+                    Bookmarks = as.numeric(as.character(bookmarks)),
+                    Hits = as.numeric(as.character(hits)),
                     WIP = unlist(WIP, recursive = FALSE),
-                    rating = unlist(rating, recursive = FALSE))
+                    Rating = unlist(rating, recursive = FALSE))
 
-stats$rating <- factor(stats$rating, levels = c("Not Rated", "General Audiences", "Teen And Up Audiences", "Mature", "Explicit"))
+stats$Rating <- factor(stats$Rating, levels = c("Not Rated", "General Audiences", "Teen And Up Audiences", "Mature", "Explicit"))
 
 ```
 
-```{r totalWorksWIP, message = FALSE}
+# Complete Work vs Work in Progress distributions
 
-barWorksWIP <- ggplot(stats, aes(x = WIP, fill=WIP)) + 
-    geom_bar(alpha=1)+
-    theme_half_open() +
-    background_grid() +
-    theme(legend.title=element_blank(),
-          axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-barWorksWIP
+* There are approximately 5 times as many Complete Works as there are Works in Progress
+* Works in Progress are approximately 3 times longer than Complete ones
+* Works in Progress get approximately twice as many hits as Complete ones
+* Works in Progress get approximately 25% more kudos than Complete ones
+* Works in Progress get approximately 3 times as many comments as Compltete ones (however there's no way to filter out author's comments in the search selection, so this statistic should be taken with a grain of salt)
+* Works in Progress get approximately twice as many bookmarks as Complete ones
 
-barWordsWIP <- ggplot(stats, aes(x = WIP, y=words, fill=WIP)) + 
-    geom_col(alpha=1)+
-    theme_half_open() +
-    background_grid() +
-    theme(legend.title=element_blank(),
-          axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-barWordsWIP
+```{r totalWorksWIP, message = FALSE, warning=FALSE, fig.width=8, fig.height=6}
 
-rm(barWorksWIP, barWordsWIP)
+statsWIP <- stats
+statsWIP$Divisor <- unlist(lapply(statsWIP$WIP, function(x) summary(statsWIP$WIP)[names(summary(statsWIP$WIP)) == x]))
+statsWIP$Words.per.Work <- statsWIP$Words/statsWIP$Divisor
+statsWIP$Hits.per.Work <- statsWIP$Hits/statsWIP$Divisor
+statsWIP$Kudos.per.Work <- statsWIP$Kudos/statsWIP$Divisor
+statsWIP$Comments.per.Work <- statsWIP$Comments/statsWIP$Divisor
+statsWIP$Bookmarks.per.Work <- statsWIP$Bookmarks/statsWIP$Divisor
+
+barWorksWIP <- plot_bar(statsWIP, 'WIP', 'right')
+barWordsWIP <- plot_col(statsWIP, 'WIP', 'Words.per.Work', 'right')
+barHitsWIP <- plot_col(statsWIP, 'WIP', 'Hits.per.Work', 'right')
+barKudosWIP <- plot_col(statsWIP, 'WIP', 'Kudos.per.Work', 'right')
+barCommentsWIP <- plot_col(statsWIP, 'WIP', 'Comments.per.Work', 'right')
+barBookmarksWIP <- plot_col(statsWIP, 'WIP', 'Bookmarks.per.Work', 'right')
+
+# plot_grid(plot_grid( barWorksWIP + theme(legend.position="none"),
+#                      barWordsWIP + theme(legend.position="none"),
+#                      barHitsWIP + theme(legend.position="none"),
+#                      barKudosWIP + theme(legend.position="none"),
+#                      barCommentsWIP + theme(legend.position="none"),
+#                      barBookmarksWIP + theme(legend.position="none"),
+#                      align = 'hv'),
+#           get_legend(barWorksWIP + theme(legend.title=element_blank())),
+#           rel_widths = c(4,1),
+#           align = 'hv')
+plot_grid( barWorksWIP + theme(legend.position="none"),
+           barWordsWIP + theme(legend.position="none"),
+           barHitsWIP + theme(legend.position="none"),
+           barKudosWIP + theme(legend.position="none"),
+           barCommentsWIP + theme(legend.position="none"),
+           barBookmarksWIP + theme(legend.position="none"),
+           align = 'hv')
+
+rm(statsWIP, barWorksWIP, barWordsWIP, barHitsWIP, barKudosWIP, barCommentsWIP, barBookmarksWIP)
 ```
 
 
-```{r statsDensitiesWIP, message = FALSE}
+```{r statsDensitiesWIP, message = FALSE, eval=FALSE, warning=FALSE}
 
-wordsDensityWIP <- plot_density(stats, 'words', 'WIP', 'right')
-hitsDensityWIP <- plot_density(stats, 'hits', 'WIP', 'right')
-kudosDensityWIP <- plot_density(stats, 'kudos', 'WIP', 'right')
-commentsDensityWIP <- plot_density(stats, 'comments', 'WIP', 'right')
-bookmarksDensityWIP <- plot_density(stats, 'bookmarks', 'WIP', 'right')
+wordsDensityWIP <- plot_density(stats, 'Words', 'WIP', 'right')
+hitsDensityWIP <- plot_density(stats, 'Hits', 'WIP', 'right')
+kudosDensityWIP <- plot_density(stats, 'Kudos', 'WIP', 'right')
+commentsDensityWIP <- plot_density(stats, 'Comments', 'WIP', 'right')
+bookmarksDensityWIP <- plot_density(stats, 'Bookmarks', 'WIP', 'right')
   
 plot_grid(wordsDensityWIP + theme(legend.position="none"),
           hitsDensityWIP + theme(legend.position="none"),
@@ -136,48 +190,73 @@ plot_grid(wordsDensityWIP + theme(legend.position="none"),
 rm(wordsDensityWIP, hitsDensityWIP, kudosDensityWIP, commentsDensityWIP, bookmarksDensityWIP)
 ```
 
-```{r statsWordsWIP, message = FALSE}
-wordsHitsWIP <- plot_points(stats, 'words', 'hits', 'WIP', 'right')
+```{r statsWordsWIP, message = FALSE, eval=FALSE, warning=FALSE}
+wordsHitsWIP <- plot_points(stats, 'Words', 'Hits', 'WIP', 'right')
 wordsHitsWIP
-wordsKudosWIP <- plot_points(stats, 'words', 'kudos', 'WIP', 'right')
+wordsKudosWIP <- plot_points(stats, 'Words', 'Kudos', 'WIP', 'right')
 wordsKudosWIP
-wordsCommentsWIP <- plot_points(stats, 'words', 'comments', 'WIP', 'right')
+wordsCommentsWIP <- plot_points(stats, 'Words', 'Comments', 'WIP', 'right')
 wordsCommentsWIP
-wordsBookmarksWIP <- plot_points(stats, 'words', 'bookmarks', 'WIP', 'right')
+wordsBookmarksWIP <- plot_points(stats, 'Words', 'Bookmarks', 'WIP', 'right')
 wordsBookmarksWIP
 
 rm(wordsHitsWIP, wordsKudosWIP, wordsCommentsWIP, wordsBookmarksWIP)
 ```
 
-```{r totalWorksRating, message = FALSE}
+# Rating distributions
 
-barWorksRating <- ggplot(stats, aes(x = rating, fill=rating)) + 
-    geom_bar(alpha=1)+
-    theme_half_open() +
-    background_grid() +
-    theme(legend.title=element_blank(),
-          axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-barWorksRating
+* Works rated G make up the most numerous category (~1300), but they are on average the shortest (~2500 words) and get fewsest hits(>1000), and fewest comments (~10)
+* Works rated T follow in numbers (~900), but are significantly longer (~9000 words)
+* Works rated M make for the smallest category (tied with Not Rated, at ~ 200), but are the longest (~13k words)
+* Works rated E are few (~350), longer than G but shorter than T rated works (~6000 words), and get the most hits, but fewer kudos and significantly less comments than T and M rated works.
 
-barWordsRating <- ggplot(stats, aes(x = rating, y=words, fill=rating)) + 
-    geom_col(alpha=1)+
-    theme_half_open() +
-    background_grid() +
-    theme(legend.title=element_blank(),
-          axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-barWordsRating
 
-rm(barWorksRating, barWordsRating)
+```{r totalWorksRating, message = FALSE, warning=FALSE, fig.width=8, fig.height=6}
+
+statsRating <- stats
+statsRating$Divisor <- unlist(lapply(statsRating$Rating, function(x) summary(statsRating$Rating)[names(summary(statsRating$Rating)) == x]))
+statsRating$Words.per.Work <- statsRating$Words/statsRating$Divisor
+statsRating$Hits.per.Work <- statsRating$Hits/statsRating$Divisor
+statsRating$Kudos.per.Work <- statsRating$Kudos/statsRating$Divisor
+statsRating$Comments.per.Work <- statsRating$Comments/statsRating$Divisor
+statsRating$Bookmarks.per.Work <- statsRating$Bookmarks/statsRating$Divisor
+
+barWorksRating <- plot_bar(statsRating, 'Rating', 'right')
+barWordsRating <- plot_col(statsRating, 'Rating', 'Words.per.Work', 'right')
+barHitsRating <- plot_col(statsRating, 'Rating', 'Hits.per.Work', 'right')
+barKudosRating <- plot_col(statsRating, 'Rating', 'Kudos.per.Work', 'right')
+barCommentsRating <- plot_col(statsRating, 'Rating', 'Comments.per.Work', 'right')
+barBookmarksRating <- plot_col(statsRating, 'Rating', 'Bookmarks.per.Work', 'right')
+
+# plot_grid(plot_grid( barWorksRating + theme(legend.position="none"),
+#                      barWordsRating + theme(legend.position="none"),
+#                      barHitsRating + theme(legend.position="none"),
+#                      barKudosRating + theme(legend.position="none"),
+#                      barCommentsRating + theme(legend.position="none"),
+#                      barBookmarksRating + theme(legend.position="none"),
+#                      align = 'hv'),
+#           get_legend(barWorksRating + theme(legend.title=element_blank())),
+#           rel_widths = c(4,1),
+#           align = 'hv')
+plot_grid( barWorksRating + theme(legend.position="none"),
+           barWordsRating + theme(legend.position="none"),
+           barHitsRating + theme(legend.position="none"),
+           barKudosRating + theme(legend.position="none"),
+           barCommentsRating + theme(legend.position="none"),
+           barBookmarksRating + theme(legend.position="none"),
+           align = 'hv')
+
+
+
+rm(statsRating, barWorksRating, barWordsRating, barHitsRating, barKudosRating, barCommentsRating, barBookmarksRating)
 ```
 
-```{r statsDensitiesRating, message = FALSE}
-wordsDensityRating <- plot_density(stats, 'words', 'rating', 'right')
-hitsDensityRating <- plot_density(stats, 'hits', 'rating', 'right')
-kudosDensityRating <- plot_density(stats, 'kudos', 'rating', 'right')
-commentsDensityRating <- plot_density(stats, 'comments', 'rating', 'right')
-bookmarksDensityRating <- plot_density(stats, 'bookmarks', 'rating', 'right')
+```{r statsDensitiesRating, message = FALSE, warning=FALSE, eval=FALSE}
+wordsDensityRating <- plot_density(stats, 'Words', 'Rating', 'right')
+hitsDensityRating <- plot_density(stats, 'Hits', 'Rating', 'right')
+kudosDensityRating <- plot_density(stats, 'Kudos', 'Rating', 'right')
+commentsDensityRating <- plot_density(stats, 'Comments', 'Rating', 'right')
+bookmarksDensityRating <- plot_density(stats, 'Bookmarks', 'Rating', 'right')
 
 plot_grid(wordsDensityRating + theme(legend.position="none"),
           hitsDensityRating + theme(legend.position="none"),
@@ -191,26 +270,28 @@ rm(wordsDensityRating, hitsDensityRating, kudosDensityRating, commentsDensityRat
 ```
 
 
-```{r statsWordsRating, message = FALSE}
-wordsHitsRating <- plot_points(stats, 'words', 'hits', 'rating', 'right')
+```{r statsWordsRating, message = FALSE, warning=FALSE, eval=FALSE}
+wordsHitsRating <- plot_points(stats, 'Words', 'Hits', 'Rating', 'right')
 wordsHitsRating
-wordsKudosRating <- plot_points(stats, 'words', 'kudos', 'rating', 'right')
+wordsKudosRating <- plot_points(stats, 'Words', 'Kudos', 'Rating', 'right')
 wordsKudosRating
-wordsCommentsRating <- plot_points(stats, 'words', 'comments', 'rating', 'right')
+wordsCommentsRating <- plot_points(stats, 'Words', 'Comments', 'Rating', 'right')
 wordsCommentsRating
-wordsBookmarksRating <- plot_points(stats, 'words', 'bookmarks', 'rating', 'right')
+wordsBookmarksRating <- plot_points(stats, 'Words', 'Bookmarks', 'Rating', 'right')
 wordsBookmarksRating
 
 rm(wordsHitsRating, wordsKudosRating, wordsCommentsRating, wordsBookmarksRating)
 
 ```
 
+# Engagement percentiles
+
 Small cheat: all the numbers on the Y axis are increased by one to include the case of 0 into the plot (otherwise excluded because of log scale)
 
-* About 75% of works have more than a 1000 words
-* Only about 25% of works have over a 1000 hits
+* About 75% of works have more than a 1000 words, but only about 10% have more than 10000 words
+* Only about 30% of works have over a 1000 hits
 * Only about 25% of works have more than a 100 kudos
-* Only about 50% of works get more than 10 comments
+* Only about 40% of works get more than 10 comments
 * Approximately 10% of works have no comments (tail end)
 * Only approximately 25% of works get more than 10 bookmarks
 * Approximately 20% of works have no bookmarks (tail end)
@@ -218,29 +299,18 @@ Small cheat: all the numbers on the Y axis are increased by one to include the c
 ```{r percentiles, message = FALSE}
 total <- 1000
 percentile <- c(1:total)
-percentileData <- data.frame(works.percentile = 100*(total - percentile)/total,
-                             words = unlist(lapply(percentile/total, quantile, x = unlist(words))) + 1,
-                             hits = unlist(lapply(percentile/total, quantile, x = unlist(hits))) + 1,
-                             kudos = unlist(lapply(percentile/total, quantile, x = unlist(kudos))) + 1,
-                             comments = unlist(lapply(percentile/total, quantile, x = unlist(comments))) + 1,
-                             bookmarks = unlist(lapply(percentile/total, quantile, x = unlist(bookmarks))) + 1 )
+percentileData <- data.frame(Works.Percentile = 100*(total - percentile)/total,
+                             Words = unlist(lapply(percentile/total, quantile, x = unlist(words))) + 1,
+                             Hits = unlist(lapply(percentile/total, quantile, x = unlist(hits))) + 1,
+                             Kudos = unlist(lapply(percentile/total, quantile, x = unlist(kudos))) + 1,
+                             Comments = unlist(lapply(percentile/total, quantile, x = unlist(comments))) + 1,
+                             Bookmarks = unlist(lapply(percentile/total, quantile, x = unlist(bookmarks))) + 1 )
 
-
-# plotPercentiles <- ggplot(percentileData, aes(x = percentile, y = bookmarks)) + 
-#                  geom_point(alpha=0.3)+
-#                  scale_y_log10(breaks = 10^c(0:10))+
-#                  scale_x_continuous(breaks = c(0:10)*10)+
-#                  theme_half_open() +
-#                  background_grid() +
-#                  theme(legend.title=element_blank(),
-#                        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-# plotPercentiles
-
-wordsPercentiles <- plot_percentiles(percentileData, 'works.percentile', 'words', 'right')
-hitsPercentiles <- plot_percentiles(percentileData, 'works.percentile', 'hits', 'right')
-kudosPercentiles <- plot_percentiles(percentileData, 'works.percentile', 'kudos', 'right')
-commentsPercentiles <- plot_percentiles(percentileData, 'works.percentile', 'comments', 'right')
-bookmarksPercentiles <- plot_percentiles(percentileData, 'works.percentile', 'bookmarks', 'right')
+wordsPercentiles <- plot_percentiles(percentileData, 'Works.Percentile', 'Words', 'right')
+hitsPercentiles <- plot_percentiles(percentileData, 'Works.Percentile', 'Hits', 'right')
+kudosPercentiles <- plot_percentiles(percentileData, 'Works.Percentile', 'Kudos', 'right')
+commentsPercentiles <- plot_percentiles(percentileData, 'Works.Percentile', 'Comments', 'right')
+bookmarksPercentiles <- plot_percentiles(percentileData, 'Works.Percentile', 'Bookmarks', 'right')
 
 plot_grid(wordsPercentiles + theme(legend.position="none"),
           hitsPercentiles + theme(legend.position="none"),
@@ -250,7 +320,24 @@ plot_grid(wordsPercentiles + theme(legend.position="none"),
           get_legend(kudosPercentiles +
                      theme(legend.title=element_blank())))
 
-#multipleFandoms <- fandom[unlist(lapply(fandom, length)) > 1]
-#crossovers <- fandom[grep('crossover',freeform, ignore.case=TRUE)]
+```
+
+# Categories
+
+```{r categories, message = FALSE}
+
+
+
+```
+
+
+# Exploratory
+
+```{r exploratory, message = FALSE}
+
+
+
+multipleFandoms <- fandom[unlist(lapply(fandom, length)) > 1]
+crossovers <- fandom[grep('crossover',freeform, ignore.case=TRUE)]
 
 ```
