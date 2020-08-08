@@ -280,7 +280,7 @@ rm(wordsHitsWIP, wordsKudosWIP, wordsCommentsWIP, wordsBookmarksWIP)
 
 # Rating distributions
 
-* Works rated G make up the most numerous category (~1300), but they are on average the shortest (~2500 words) and get fewsest hits(>1000), and fewest comments (~10).
+* Works rated G make up the most numerous category (~1300), but they are on average the shortest (~2500 words) and get fewest hits(>1000), and fewest comments (~10).
 * Works rated T follow in numbers (~900), but are significantly longer (~9000 words).
 * Works rated M make for the smallest category (tied with Not Rated, at ~ 200), but are the longest (~13k words).
 * Works rated E are few (~350), longer than G but shorter than T rated works (~6000 words), and get the most hits, but fewer kudos and significantly less comments than T and M rated works.
@@ -506,7 +506,7 @@ rm(AuthorTable)
 
 # Characters
 
-Top 30 of the most popupar characters:
+Top 30 of the most popular characters:
 
 ```{r characters, message = FALSE}
 topList <- 30
@@ -522,7 +522,7 @@ rm(CharacterTable)
 
 # Relationships
 
-Top 30 of the most popupar relationships:
+Top 30 of the most popular relationships:
 
 ```{r relationships, message = FALSE}
 topList <- 30
@@ -540,7 +540,7 @@ I don't have access to Ao3's system of synonymous tags, so by virtue of text pro
 
 # Freeform tags
 
-Top 30 of the most popupar freeform tags
+Top 30 of the most popular freeform tags
 
 ```{r freeform, message = FALSE}
 topList <- 30
@@ -556,7 +556,7 @@ rm(FreeformTable)
 
 # Languages
 
-Unsurprisingly, most works are written in English. Apologies for U+, kable package for whatever reason murders unicode characters. The two languages in question are Russian (Русский) and Chinese (中文).
+Unsurprisingly, most works are written in English. Apologies for U+. kable package for whatever reason murders unicode characters. The two languages in question are Russian (Русский) and Chinese (中文).
 
 ```{r languages, message = FALSE}
 #topList <- 30
