@@ -30,6 +30,10 @@ custompalette <- brewer.pal(n=8, name = 'Dark2')
 library(knitr) # for tables
 library(kableExtra) # for tables
 
+library(lubridate) # for dates
+
+library(plyr) # ddply, to summarize number of words by author
+
 load('worksData_TDP.RData')
 
 ```
@@ -163,13 +167,62 @@ percentileData <- data.frame(Works.Percentile = 100*(total - percentile)/total,
                              Comments = unlist(lapply(percentile/total, quantile, x = unlist(comments))) + 1,
                              Bookmarks = unlist(lapply(percentile/total, quantile, x = unlist(bookmarks))) + 1 )
 
-rm(rating, WIP, words, kudos, comments, bookmarks, hits)
+rm(rating, kudos, comments, bookmarks, hits)
 
 ```
 
+# Timeline
+
+Vertical lines on the graph indicate season release dates. As expected, after each new season, there's a peak of activity which fades in about 2 months. Curiously, a few works were posted before official season 1 release. This may be attributed to the series trailer drop in July 2018 at the San Diego Comic-Con.
+
+```{r timelineTotal, message = FALSE}
+
+#data$Timestamp <- parse_date_time2(as.character(data$Timestamp), orders = "%d/%m/%Y %H:%M:%S")
+#data$day <- as.Date(data$Timestamp)
+
+seasons <- c("2018-09-14", "2019-02-15", "2019-11-22")
+seasons <- as.Date(seasons)
+
+dates <- data.frame(date = do.call("c", date),
+                    WIP = unlist(WIP))
+
+plotDatesDensityTotal <- ggplot(dates, aes(x = date)) + 
+                    geom_density(alpha = 0.1)+
+                    geom_vline(xintercept=seasons)+
+                    scale_x_date(date_breaks="2 months")+
+                    theme_half_open() +
+                    background_grid() +
+                    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                          legend.position = 'right')
+plotDatesDensityTotal
+
+rm(plotDatesDensityTotal)
+```
+
+It's important to note, that I collect data from the Ao3 search page (rather than works pages, as it's less disruptive), so I don't have access to initial postage dates, only the latest updates. This means that the upward trend in works over time can be an artifact of series getting more popular, but also could be attributed to multichapter works drifting further in time due to updates.
+
+If we plot Complete Works and Works in Progress separately, we still see an upward trend in both, but the slope characterising the growth of Work In progress peaks seems steeper than for Complete Works, which to me indicates at least partial effect of the multichapter drift.
+
+```{r timelineWIP, message = FALSE}
+
+plotDatesDensity <- ggplot(dates, aes(x = date, col=WIP)) + 
+                    geom_density(alpha = 0.1)+
+                    geom_vline(xintercept=seasons)+
+                    scale_x_date(date_breaks="2 months")+
+                    theme_half_open() +
+                    background_grid() +
+                    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                          legend.position = 'right')
+plotDatesDensity
+
+rm(seasons, dates, plotDatesDensity)
+
+```
+
+
 # Engagement percentiles
 
-Small cheat: all the numbers on the Y axis are increased by 1 to include the case of 0 into the plot (otherwise excluded because of log scale).
+Small plotting cheat: all the numbers on the Y axis are increased by 1 to include the case of 0 into the plot (otherwise excluded because of log scale).
 
 * About 75% of works have more than a 1000 words, but only about 10% have more than 10000 words.
 * Only about 30% of works have over a 1000 hits.
@@ -391,7 +444,7 @@ rm(singleCategorySummary, multipleCategorySummary, categorySummary, plotCategori
 
 ```
 
-## Engagement by a single category
+# Engagement by a single category
 
 For simplicity I'm only looking at works tagged with a single category here.
 
@@ -487,11 +540,11 @@ Number of works tagged with more than 1 fandom is `r length(severalFandoms)`, ho
 
 Number of works explicitly tagged as 'crossover' is lower: `r length(crossovers)`. Out of multiple fandom tag works a significant amount are tagged with 2: `r length(fandom[unlist(lapply(fandom, length)) == 2])`, which, upon inspection, don't seem overwhelmingly synonymous, so perhaps some authors simply don't tag for crossovers.
 
-# Authors
+# Authors by Works
 
-Top 10 of most prolific authors in the tag by the number of stories as of data collection date:
+Top 30 of most prolific authors in the tag by the number of stories as of data collection date:
 
-```{r authors, message = FALSE}
+```{r authorsWorks, message = FALSE}
 topList <- 30
 
 AuthorTable <- data.frame('Author' = names(summary(as.factor(unlist(author)))[1:topList]),
@@ -502,6 +555,41 @@ kable(AuthorTable,
       col.names = c('Author', 'Number of Stories'))
 
 rm(AuthorTable)
+```
+
+# Authors by Words
+
+Only `r sum(unlist(lapply(author, length))>1)` works have more than one author. In cases where works had more than one author, I assumed that each of them contributed an equal amounts of words.
+
+Top 30 of most prolific authors in the tag by the number of words written as of data collection date:
+
+```{r authorsWords, message = FALSE}
+
+wordsByAuthor <- c()
+
+for (i in 1:length(words)){
+  if (length(author[[i]]) > 1) {
+    wordsByAuthor <- c(wordsByAuthor, rep(words[[i]]/length(author[[5]]), length(author[[i]]) ) )
+  } else {
+    wordsByAuthor <- c(wordsByAuthor, words[[i]])
+  }
+}
+
+AuthorWordsTable <- data.frame('Author' = as.factor(unlist(author)),
+                               'Words' = wordsByAuthor)
+
+AuthorWordsSummary <- ddply(AuthorWordsTable, .(Author), 
+                            summarize, 
+                            Total.Words = sum(Words))
+AuthorWordsSummary <- AuthorWordsSummary[order(AuthorWordsSummary$Total.Words, decreasing = TRUE),]
+row.names(AuthorWordsSummary) <- c()
+
+topList <- 30
+
+kable(AuthorWordsSummary[1:topList,],
+      col.names = c('Author', 'Total Words'))
+
+rm(wordsByAuthor, i, AuthorWordsTable, AuthorWordsSummary)
 ```
 
 # Characters
@@ -524,6 +612,8 @@ rm(CharacterTable)
 
 Top 30 of the most popular relationships:
 
+I don't have access to Ao3's system of synonymous tags, so by virtue of text processing some relationship tags here are repeated. 
+
 ```{r relationships, message = FALSE}
 topList <- 30
 RelationshipsTable<- data.frame('Relationship' = names(summary(as.factor(unlist(relationships)))[1:topList]),
@@ -535,8 +625,6 @@ kable(RelationshipsTable,
 
 rm(RelationshipsTable)
 ```
-
-I don't have access to Ao3's system of synonymous tags, so by virtue of text processing some relationship tags here are repeated. 
 
 # Freeform tags
 
