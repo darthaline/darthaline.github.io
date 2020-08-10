@@ -38,7 +38,7 @@ load('TDP_worksData.RData')
 
 ```
 
-This is a document detailing analysis of `r tagValue` Ao3 tag data, collected on the 7 Aug 2020. I haven't figured out a way to get my scrapper to log in into Ao3 (yet? rvest seems to have some trouble with page redirects), so results here are based on the works visible without authentication, which likely filters out preferentially explicit/problemantic works from the selection.
+This is a document detailing analysis of [`r tagValue` Ao3 tag](https://archiveofourown.org/tags/The%20Dragon%20Prince%20(Cartoon)/works) data, collected on the 7 Aug 2020. I haven't figured out a way to get my scrapper to log in into Ao3 (yet? rvest seems to have some trouble with page redirects), so results here are based on the works visible without authentication, which likely filters out preferentially explicit/problemantic works from the selection.
 
 ```{r plottingFunctions, collapse=TRUE, warning=FALSE}
 
@@ -173,7 +173,7 @@ rm(rating, kudos, comments, bookmarks, hits)
 
 # Timeline
 
-Vertical lines on the graph indicate season release dates. As expected, after each new season, there's a peak of activity which fades in about 2 months. Curiously, a few works were posted before official season 1 release. This may be attributed to the series trailer drop in July 2018 at the San Diego Comic-Con.
+Vertical lines on the graph indicate season release dates according to [Wiki article](https://en.wikipedia.org/wiki/The_Dragon_Prince#Episodes). As expected, after each new season, there's a peak of activity which fades in about 2 months. Curiously, a few works were posted before official season 1 release. This may be attributed to the series trailer drop in July 2018 at the San Diego Comic-Con.
 
 ```{r timelineTotal, message = FALSE}
 
@@ -614,6 +614,8 @@ Top 30 of the most popular relationships:
 
 I don't have access to Ao3's system of synonymous tags, so by virtue of text processing some relationship tags here are repeated. 
 
+Overwhelmingly, "Callum/Rayla (The Dragon Prince)" is the most popular relationship in TDP. They are followed by "Ethari/Runaan (The Dragon Prince)", which is not immediately obvious due to common use of synonymous tags such as "Runaan/Tinker | Necklace Elf (The Dragon Prince)" and "Runaan/Ethari". Third most popular relationship is "Amaya/Janai (The Dragon Prince)".
+
 ```{r relationships, message = FALSE}
 topList <- 30
 RelationshipsTable<- data.frame('Relationship' = names(summary(as.factor(unlist(relationships)))[1:topList]),
@@ -663,3 +665,7 @@ kable(LanguageTable,
 
 #rm(LanguageTable)
 ```
+
+# Other links
+
+If you enjoyed my analysis, please, consider [buying me a coffee](https://ko-fi.com/D1D8RIG5) or some other beverage.
