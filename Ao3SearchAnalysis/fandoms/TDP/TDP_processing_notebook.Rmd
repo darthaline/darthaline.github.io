@@ -448,8 +448,6 @@ rm(singleCategorySummary, multipleCategorySummary, categorySummary, plotCategori
 
 For simplicity I'm only looking at works tagged with a single category here.
 
-Out of the 3 main shipping categories, "M/M" has most E rated works, and "F/F" has the least.
-
 "Multi" seems to have most words, despite being a rather small category, and collects quite a bit of Hits and Comments. It's possible that a number of those works are collections of stories for many fandoms, which amplifies the number of Hits and Comments, but that requires further investigation.
 
 ```{r categoriesSingleEngagement, message = FALSE, warning = FALSE, fig.width=10, fig.height=6}
@@ -463,6 +461,7 @@ statsCategory$Hits.per.Work <- statsCategory$Hits/statsCategory$Divisor
 statsCategory$Kudos.per.Work <- statsCategory$Kudos/statsCategory$Divisor
 statsCategory$Comments.per.Work <- statsCategory$Comments/statsCategory$Divisor
 statsCategory$Bookmarks.per.Work <- statsCategory$Bookmarks/statsCategory$Divisor
+statsCategory$Works.Percent <- 1/statsCategory$Divisor
 
 barWorksCategory <- plot_bar_color(statsCategory, 'Category', 'Rating', 'right')
 barWordsCategory <- plot_col_color(statsCategory, 'Category', 'Words.per.Work', 'Rating', 'right')
@@ -481,9 +480,23 @@ plot_grid(plot_grid( barWorksCategory + theme(legend.position="none"),
           get_legend(barWorksCategory + theme(legend.title=element_blank())),
           rel_widths = c(4,1))
 
-rm(statsCategory, barWorksCategory, barWordsCategory, barHitsCategory, barKudosCategory, barCommentsCategory, barBookmarksCategory)
+```
+
+# Ratings percentages by a single category
+
+Out of the 3 main shipping categories in absolute numbers "M/M" has most E rated works, and "F/F" has the least, but in percentages of total works "F/F" and "F/M" are distributed almost identically, while "M/M" skews more towards M and E rated works.
+
+```{r categoriesSingleEngagementPercent, message = FALSE, warning = FALSE, fig.width=10, fig.height=6}
+
+plotWorksCategoryNormalized <- plot_col_color(statsCategory, 'Rating', 'Works.Percent', 'Rating', 'none')+
+                               scale_y_continuous(labels=scales::percent)+
+                               facet_wrap(.~Category)
+plotWorksCategoryNormalized
+
+rm(statsCategory, barWorksCategory, barWordsCategory, barHitsCategory, barKudosCategory, barCommentsCategory, barBookmarksCategory, plotWorksCategoryNormalized)
 
 ```
+
 
 # Archive Warnings
 
