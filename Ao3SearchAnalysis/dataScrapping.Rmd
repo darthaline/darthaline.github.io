@@ -109,8 +109,11 @@ Test cases for valid cases.
 #tdp page
 #url <- 'https://archiveofourown.org/tags/The%20Dragon%20Prince%20(Cartoon)/works'
 
-#tlok page
-url <- 'https://archiveofourown.org/tags/Avatar:%20Legend%20of%20Korra/works'
+#lok page
+#url <- 'https://archiveofourown.org/tags/Avatar:%20Legend%20of%20Korra/works'
+
+#atla page
+url <- 'https://archiveofourown.org/tags/Avatar:%20The%20Last%20Airbender/works'
 ```
 
 Before we start processing anything, we check that the search has valid results.
