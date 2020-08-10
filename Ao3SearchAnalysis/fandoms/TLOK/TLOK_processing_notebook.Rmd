@@ -298,7 +298,7 @@ rm(statsWIP, barWorksWIP, barWordsWIP, barHitsWIP, barKudosWIP, barCommentsWIP, 
 * Works rated G are on average the shortest (~2500 words), followed by Not Rated works (>5000 words), T (~11000 words), E (~ 15000 words), and M (~22000 words). The trend of M rated works being the longest we observed in TDP holds up here as well.
 * Not Rated works and works rated G get fewest hits (~1500). Number of hits rises with the rating. E rated works are most popular (~8500).
 * Number of kudos doesn't quite scale up with the number of hits, but unlike in TDP case E rated works also get the most kudos (~220). The difference in distribution might be due to the fact that TLOK fandom on average skews older.
-* Works rated M get the most comments (>50) whihc might correlate with them being the longest.
+* Works rated M get the most comments (>50) which might correlate with them being the longest.
 * Number of bookmarks doesn't quite scale up with the number of hits, again, but it grows with the rating, reaching maximum for E rated works (~25 bookmarks).
 
 
