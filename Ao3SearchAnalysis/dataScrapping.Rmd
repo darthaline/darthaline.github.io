@@ -107,7 +107,10 @@ Test cases for valid cases.
 
 ```{r researchUrls, message = FALSE}
 #tdp page
-url <- 'https://archiveofourown.org/tags/The%20Dragon%20Prince%20(Cartoon)/works'
+#url <- 'https://archiveofourown.org/tags/The%20Dragon%20Prince%20(Cartoon)/works'
+
+#tlok page
+url <- 'https://archiveofourown.org/tags/Avatar:%20Legend%20of%20Korra/works'
 ```
 
 Before we start processing anything, we check that the search has valid results.
