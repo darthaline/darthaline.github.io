@@ -196,7 +196,7 @@ rm(plotDatesDensityTotal)
 
 I collect data from the Ao3 search page (rather than works pages, as it's less disruptive to site's function), so I don't have access to initial postage dates, only the latest updates. This means that the upward trend in works over time can be an artifact of series getting more popular, but also could be attributed to multichapter works drifting further in time due to updates.
 
-Plotting Complete Works and Works in Progress gives are similar overall shape to the total distribution, but with flatter bump around season 1 of LOK release and sharper new peak for Works in Progress. Speculatively, it's possible that a lot of works in progress were started a while back, but now, due to more free time authors have are updated, contributing to the dramatic 2020 peak.
+Plotting Complete Works and Works in Progress gives are similar overall shape to the total distribution, but with flatter bump around season 1 of LOK release and sharper new peak for Works in Progress. Speculatively, it's possible that Works in Progress which were started a while back, are now updating due to social distancing, contributing to the dramatic 2020 peak.
 
 ```{r timelineWIP, message = FALSE, fig.width=10, fig.height=6}
 
@@ -433,7 +433,7 @@ rm(barWorksCategory, barWordsCategory, barHitsCategory, barKudosCategory, barCom
 
 ```
 
-#Single Category through time
+# Single Category through time
 
 Interestingly, seasons 3 and 4 of LOK brought increase of 'F/F' category popularity in ATLA, likely due to works being tagged with both fandom tags. Recent peak shows high number of 'M/M' works, which may be due to recent rise in popularity of Zukka - 'Sokka/Zuko (Avatar)' relationship.
 
