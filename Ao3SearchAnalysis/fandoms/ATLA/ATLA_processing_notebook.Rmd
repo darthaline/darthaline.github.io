@@ -1,0 +1,636 @@
+---
+title: "Ao3 data analysis for Avatar: The Last Airbender"
+author: "darthaline"
+date: "10 Aug 2020"
+output:
+  html_notebook:
+    code_folding: "hide"
+    toc: true
+---
+
+# About
+
+```{r setup, message = FALSE, warning=FALSE}
+
+Sys.setenv(LANG = "en")
+#library("rstudioapi") #to grab local position of the script
+#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+knitr::opts_knit$set(root.dir = '.')
+
+#library("rvest") # to handle html stuff
+
+library(lubridate) # to handle dates
+
+library(ggplot2) # for plotting
+library(cowplot) # for plotting
+library(RColorBrewer) # for choosing colors
+
+custompalette <- brewer.pal(n=8, name = 'Dark2')
+
+library(knitr) # for tables
+library(kableExtra) # for tables
+
+library(lubridate) # for dates
+
+library(plyr) # ddply, to summarize number of words by author
+
+load('ATLA_worksData.RData')
+
+```
+
+This is a document detailing analysis of [`r tagValue` Ao3 tag](https://archiveofourown.org/tags/Avatar:%20The%20Last%20Airbender/works) data, collected on the 10 Aug 2020. I haven't figured out a way to get my scrapper to log in into Ao3 (yet? rvest seems to have some trouble with page redirects), so results here are based on the works visible without authentication, which likely filters out preferentially explicit/problemantic works from the selection.
+
+```{r plottingFunctions, collapse=TRUE, warning=FALSE}
+
+plot_bar <- function (data, columnX, legendPosition) {
+    ggplot(data, aes_string(x = columnX)) + 
+    geom_bar(alpha=1)+
+    theme_half_open() +
+    background_grid() +
+    theme(legend.title=element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+    labs(y="Number of works")
+}
+
+plot_bar_color <- function (data, columnX, colColor, legendPosition) {
+    ggplot(data, aes_string(x = columnX, fill=colColor)) + 
+    geom_bar(alpha=0.7)+
+    scale_fill_manual(values = custompalette) +
+    theme_half_open() +
+    background_grid() +
+    theme(legend.title=element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+    labs(y="Number of works")
+}
+
+plot_col <- function (data, columnX, columnY, legendPosition) {
+    ggplot(data, aes_string(x = columnX, y = columnY)) + 
+    geom_col(alpha=1)+
+    theme_half_open() +
+    background_grid() +
+    theme(legend.title=element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+    labs(y=gsub('\\.', ' ', columnY))
+  
+}
+
+plot_col_color <- function (data, columnX, columnY, colColor, legendPosition) {
+    ggplot(data, aes_string(x = columnX, y = columnY, fill=colColor)) + 
+    geom_col(alpha=0.7)+
+    scale_fill_manual(values = custompalette) +
+    theme_half_open() +
+    background_grid() +
+    theme(legend.title=element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+    labs(y=gsub('\\.', ' ', columnY))
+  
+}
+
+plot_percentiles <- function (data, columnX, columnY, legendPosition) {
+    ggplot(data, aes_string(x = columnX, y = columnY)) + 
+    geom_point(alpha=0.3)+
+    scale_y_log10(breaks = 10^c(0:15))+
+    scale_x_continuous(breaks = c(0, 25, 50, 75, 100))+ #scale_x_continuous(breaks = c(0:10)*10)+
+    theme_half_open() +
+    background_grid() +
+    theme(legend.title=element_blank())+
+    labs(x=gsub('\\.', ' ', columnX))
+}
+
+```
+
+```{r flatteningData, message = FALSE, warning=FALSE}
+#title <- lapply(worksData, function(x) {x$Title})
+author <- lapply(worksData, function(x) {x$Author})
+fandom <- lapply(worksData, function(x) {x$Fandom})
+rating <- lapply(worksData, function(x) {x$Rating})
+warnings <- lapply(worksData, function(x) {x$Warnings})
+category <- lapply(worksData, function(x) {x$Category})
+WIP <- lapply(worksData, function(x) {x$WIP})
+date <-lapply(worksData, function(x) {x$Date})
+relationships <-lapply(worksData, function(x) {x$Relationships})
+character <-lapply(worksData, function(x) {x$Character})
+freeform <-lapply(worksData, function(x) {x$Freeform})
+language <-lapply(worksData, function(x) {x$Language})
+words <-lapply(worksData, function(x) {x$Words})
+words[is.na(words)] <- 0
+kudos <-lapply(worksData, function(x) {x$Kudos})
+kudos[is.na(kudos)] <- 0
+comments <-lapply(worksData, function(x) {x$Comments})
+comments[is.na(comments)] <- 0
+bookmarks<-lapply(worksData, function(x) {x$Bookmarks})
+bookmarks[is.na(bookmarks)] <- 0
+hits <-lapply(worksData, function(x) {x$Hits})
+hits[is.na(hits)] <- 0
+
+stats <- data.frame(Words = unlist(words, recursive = FALSE),
+                    Comments= as.numeric(as.character(comments)),
+                    Kudos = as.numeric(as.character(kudos)),
+                    Bookmarks = as.numeric(as.character(bookmarks)),
+                    Hits = as.numeric(as.character(hits)),
+                    WIP = unlist(WIP, recursive = FALSE),
+                    Rating = unlist(rating, recursive = FALSE),
+                    Date = do.call("c", date))
+
+stats$Rating <- factor(stats$Rating, levels = c("Not Rated", "General Audiences", "Teen And Up Audiences", "Mature", "Explicit"))
+
+total <- 1000
+percentile <- c(1:total)
+percentileData <- data.frame(Works.Percentile = 100*(total - percentile)/total,
+                             Words = unlist(lapply(percentile/total, quantile, x = unlist(words) )) + 1,
+                             Hits = unlist(lapply(percentile/total, quantile, x = unlist(hits) )) + 1,
+                             Kudos = unlist(lapply(percentile/total, quantile, x = unlist(kudos) )) + 1,
+                             Comments = unlist(lapply(percentile/total, quantile, x = unlist(comments) )) + 1,
+                             Bookmarks = unlist(lapply(percentile/total, quantile, x = unlist(bookmarks) )) + 1 )
+
+rm(kudos, comments, bookmarks, hits)
+
+```
+
+# Timeline
+
+Solid vertical lines on the graph indicate initial air dates, and dashed ones indicate final air dates, according to [Wiki article](https://en.wikipedia.org/wiki/Avatar:_The_Last_Airbender#Episodes). Blue lines, similarly indicate air dates of Avatar: Legend of Korra (LOK) series according to [Wiki article](https://en.wikipedia.org/wiki/The_Legend_of_Korra#Series_overview). Red line indicates opening of [Ao3](https://en.wikipedia.org/wiki/Archive_of_Our_Own)'s beta.
+
+Avatar: the Last Airbender (ATLA) is an interesting case, because the entire show has been aired before the Ao3 was founded and open to the public. However, `r sum(unlist(date) < ao3birth)` works are posted before A03 beta was open, indicating that those were likely added to AO3 via Import tool from other fanfiction sites/archives.
+
+After Ao3 beta opening there was a steady upward trend in popularity. After LOK release the trend vaguely follows the shape of LOK distribution. Finally, the recent high peak starts slowly at around 2018, possibly due to Blueray release of the series in June 2018, and continues up until now. It's possible that particular sharp increase in 2020 could be related both to coronavirus social distancing measures and US Netflix release in May 2020.
+
+```{r timelineTotal, message = FALSE, fig.width=10, fig.height=6}
+
+#data$Timestamp <- parse_date_time2(as.character(data$Timestamp), orders = "%d/%m/%Y %H:%M:%S")
+#data$day <- as.Date(data$Timestamp)
+
+seasonsStart <- c("2005-02-21", "2006-03-17", "2007-09-21")
+seasonsStart <- as.Date(seasonsStart)
+seasonsEnd <- c("2005-12-02", "2006-12-01", "2008-07-18")
+seasonsEnd <- as.Date(seasonsEnd)
+
+ao3birth <- "2009-11-14"
+ao3birth <- as.Date(ao3birth)
+
+seasonsStartLOK <- c("2012-04-14", "2013-09-13", "2014-06-27", "2014-10-03")
+seasonsStartLOK <- as.Date(seasonsStartLOK)
+seasonsEndLOK <- c("2012-06-23", "2013-11-22", "2014-08-22", "2014-12-19")
+seasonsEndLOK <- as.Date(seasonsEndLOK)
+
+plotDatesDensityTotal <- ggplot(stats, aes(x = Date)) + 
+                    geom_density(alpha = 0.1)+
+                    geom_vline(xintercept=seasonsStart)+
+                    geom_vline(xintercept=seasonsEnd, linetype ="longdash")+
+                    geom_vline(xintercept=ao3birth, col='red')+
+                    geom_vline(xintercept=seasonsStartLOK, col='blue')+
+                    geom_vline(xintercept=seasonsEndLOK, linetype ="longdash", col='blue')+
+                    scale_x_date(date_breaks="12 months")+
+                    theme_half_open() +
+                    background_grid() +
+                    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                          legend.position = 'right')
+plotDatesDensityTotal
+
+rm(plotDatesDensityTotal)
+```
+
+I collect data from the Ao3 search page (rather than works pages, as it's less disruptive to site's function), so I don't have access to initial postage dates, only the latest updates. This means that the upward trend in works over time can be an artifact of series getting more popular, but also could be attributed to multichapter works drifting further in time due to updates.
+
+Plotting Complete Works and Works in Progress gives are similar overall shape to the total distribution, but with flatter bump around season 1 of LOK release and sharper new peak for Works in Progress. Speculatively, it's possible that a lot of works in progress were started a while back, but now, due to more free time authors have are updated, contributing to the dramatic 2020 peak.
+
+```{r timelineWIP, message = FALSE, fig.width=10, fig.height=6}
+
+plotDatesDensity <- ggplot(stats, aes(x = Date, col=WIP)) + 
+                    geom_density(alpha = 0.1)+
+                    geom_vline(xintercept=seasonsStart)+
+                    geom_vline(xintercept=seasonsEnd, linetype ="longdash")+
+                    geom_vline(xintercept=ao3birth, col='red')+
+                    geom_vline(xintercept=seasonsStartLOK, col='blue')+
+                    geom_vline(xintercept=seasonsEndLOK, linetype ="longdash", col='blue')+
+                    scale_x_date(date_breaks="12 months")+
+                    theme_half_open() +
+                    background_grid() +
+                    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                          legend.position = 'right')
+plotDatesDensity
+
+rm(plotDatesDensity)
+
+```
+
+# Engagement percentiles
+
+Small plotting cheat: all the numbers on the Y axis are increased by 1 to include the case of 0 into the plot (otherwise excluded because of log scale).
+
+* About 75% of works have more than a 1000 words, but only about 15% have more than 10000 words.
+* Only about 50% of works have over a 1000 hits.
+* Only about 40% of works have more than a 100 kudos.
+* Only about 40% of works get more than 10 comments.
+* Approximately 10% of works have no comments (tail end).
+* Only approximately 40% of works get more than 10 bookmarks.
+* Approximately 12% of works have no bookmarks (tail end).
+
+```{r percentiles, message = FALSE}
+wordsPercentiles <- plot_percentiles(percentileData, 'Works.Percentile', 'Words', 'right')
+hitsPercentiles <- plot_percentiles(percentileData, 'Works.Percentile', 'Hits', 'right')
+kudosPercentiles <- plot_percentiles(percentileData, 'Works.Percentile', 'Kudos', 'right')
+commentsPercentiles <- plot_percentiles(percentileData, 'Works.Percentile', 'Comments', 'right')
+bookmarksPercentiles <- plot_percentiles(percentileData, 'Works.Percentile', 'Bookmarks', 'right')
+
+plot_grid(wordsPercentiles + theme(legend.position="none"),
+          hitsPercentiles + theme(legend.position="none"),
+          kudosPercentiles + theme(legend.position="none"),
+          commentsPercentiles + theme(legend.position="none"),
+          bookmarksPercentiles + theme(legend.position="none"),
+          get_legend(kudosPercentiles +
+                     theme(legend.title=element_blank())))
+
+rm(total, percentile, percentileData, wordsPercentiles, hitsPercentiles, kudosPercentiles, commentsPercentiles, bookmarksPercentiles)
+
+```
+
+# Complete Work vs Work in Progress distributions
+
+* There are approximately 3 times as many Complete Works as there are Works in Progress.
+* Works in Progress are approximately 3 times longer than Complete ones.
+* Works in Progress get marginally more hits than Complete ones.
+* Works in Progress get approximately 30% less kudos than Complete ones.
+* Works in Progress get more than 2 times as many comments as Complete ones (however, again, there's no way to filter out author's comments in the search selection).
+* Works in Progress get slightly more bookmarks than Complete ones.
+
+```{r totalWorksWIP, message = FALSE, warning=FALSE, fig.width=8, fig.height=6}
+
+statsWIP <- stats
+statsWIP$Divisor <- unlist(lapply(statsWIP$WIP, function(x) summary(statsWIP$WIP)[names(summary(statsWIP$WIP)) == x]))
+statsWIP$Words.per.Work <- statsWIP$Words/statsWIP$Divisor
+statsWIP$Hits.per.Work <- statsWIP$Hits/statsWIP$Divisor
+statsWIP$Kudos.per.Work <- statsWIP$Kudos/statsWIP$Divisor
+statsWIP$Comments.per.Work <- statsWIP$Comments/statsWIP$Divisor
+statsWIP$Bookmarks.per.Work <- statsWIP$Bookmarks/statsWIP$Divisor
+
+barWorksWIP <- plot_bar(statsWIP, 'WIP', 'right')
+barWordsWIP <- plot_col(statsWIP, 'WIP', 'Words.per.Work', 'right')
+barHitsWIP <- plot_col(statsWIP, 'WIP', 'Hits.per.Work', 'right')
+barKudosWIP <- plot_col(statsWIP, 'WIP', 'Kudos.per.Work', 'right')
+barCommentsWIP <- plot_col(statsWIP, 'WIP', 'Comments.per.Work', 'right')
+barBookmarksWIP <- plot_col(statsWIP, 'WIP', 'Bookmarks.per.Work', 'right')
+
+# plot_grid(plot_grid( barWorksWIP + theme(legend.position="none"),
+#                      barWordsWIP + theme(legend.position="none"),
+#                      barHitsWIP + theme(legend.position="none"),
+#                      barKudosWIP + theme(legend.position="none"),
+#                      barCommentsWIP + theme(legend.position="none"),
+#                      barBookmarksWIP + theme(legend.position="none"),
+#                      align = 'hv'),
+#           get_legend(barWorksWIP + theme(legend.title=element_blank())),
+#           rel_widths = c(4,1),
+#           align = 'hv')
+plot_grid( barWorksWIP + theme(legend.position="none"),
+           barWordsWIP + theme(legend.position="none"),
+           barHitsWIP + theme(legend.position="none"),
+           barKudosWIP + theme(legend.position="none"),
+           barCommentsWIP + theme(legend.position="none"),
+           barBookmarksWIP + theme(legend.position="none"),
+           align = 'hv')
+
+rm(statsWIP, barWorksWIP, barWordsWIP, barHitsWIP, barKudosWIP, barCommentsWIP, barBookmarksWIP)
+```
+
+# Rating distributions
+
+* Works rated G and T make up the majority of works.
+* Works rated G are on average the shortest (~3000 words), followed by Not Rated works (~7000 words), T (~12000 words), E (~ 15000 words), and M (~22000 words). The trend of M rated works being the longest holds up here as well.
+* Not Rated works and works rated G get fewest hits (~2000). Number of hits rises with the rating. E rated works are most popular (~8000).
+* Not Rated, G and M rated works get on average 200 kudos, while T and E rated works get ~ 300.
+* T, M and E rated works get over 30 comments on average, while G rated works get only half of that.
+* T rated works get the most bookmarks (>40) and G rated works get the least (<30).
+
+
+```{r totalWorksRating, message = FALSE, warning=FALSE, fig.width=8, fig.height=6}
+
+statsRating <- stats
+statsRating$Divisor <- unlist(lapply(statsRating$Rating, function(x) summary(statsRating$Rating)[names(summary(statsRating$Rating)) == x]))
+statsRating$Words.per.Work <- statsRating$Words/statsRating$Divisor
+statsRating$Hits.per.Work <- statsRating$Hits/statsRating$Divisor
+statsRating$Kudos.per.Work <- statsRating$Kudos/statsRating$Divisor
+statsRating$Comments.per.Work <- statsRating$Comments/statsRating$Divisor
+statsRating$Bookmarks.per.Work <- statsRating$Bookmarks/statsRating$Divisor
+
+barWorksRating <- plot_bar(statsRating, 'Rating', 'right')
+barWordsRating <- plot_col(statsRating, 'Rating', 'Words.per.Work', 'right')
+barHitsRating <- plot_col(statsRating, 'Rating', 'Hits.per.Work', 'right')
+barKudosRating <- plot_col(statsRating, 'Rating', 'Kudos.per.Work', 'right')
+barCommentsRating <- plot_col(statsRating, 'Rating', 'Comments.per.Work', 'right')
+barBookmarksRating <- plot_col(statsRating, 'Rating', 'Bookmarks.per.Work', 'right')
+
+plot_grid( barWorksRating + theme(legend.position="none"),
+           barWordsRating + theme(legend.position="none"),
+           barHitsRating + theme(legend.position="none"),
+           barKudosRating + theme(legend.position="none"),
+           barCommentsRating + theme(legend.position="none"),
+           barBookmarksRating + theme(legend.position="none"),
+           align = 'hv')
+
+rm(statsRating, barWorksRating, barWordsRating, barHitsRating, barKudosRating, barCommentsRating, barBookmarksRating)
+```
+
+# Categories
+
+There are `r length(category[unlist(lapply(category, function(x) length(x))) == 1])` works tagged with a single category, and `r length(category[unlist(lapply(category, function(x) length(x))) > 1])` tagged with 2 or more (up until all 6).
+
+'F/M' is the most popular category, closely followed by 'Gen', and then by and 'M/M' and 'F/F', with 'No category' works being close to 'F/F' numbers.
+
+Multiple category fics strongly contribute towards 'F/M' count, then to 'Gen', 'M/M', and 'F/F', and only marginally to 'Multi' and 'Other'.
+
+```{r categoriesBars, message = FALSE}
+
+singleCategorySummary <- summary(as.factor(unlist(category[unlist(lapply(category, function(x) length(x))) == 1])))
+singleCategorySummary <- data.frame(Category = names(singleCategorySummary),
+                                    Number.of.Works = singleCategorySummary)
+singleCategorySummary$Split <- "Single category"
+
+multipleCategorySummary <- data.frame(Category = c('Gen', 'F/F', 'F/M', 'M/M', 'Multi', 'Other', 'No category'),
+                              Number.of.Works = c(sum(grepl('Gen',category)),
+                                                  sum(grepl('F/F',category)),
+                                                  sum(grepl('F/M',category)),
+                                                  sum(grepl('M/M',category)),
+                                                  sum(grepl('Multi',category)),
+                                                  sum(grepl('Other',category)),
+                                                  sum(grepl('No category',category))) )
+multipleCategorySummary$Split <- "All works"
+
+categorySummary <- rbind(singleCategorySummary, multipleCategorySummary)
+categorySummary$Category <- factor(categorySummary$Category, levels = c('Gen', 'F/F', 'F/M', 'M/M', 'Multi', 'Other', 'No category'))
+categorySummary$Split <- factor(categorySummary$Split, levels = c("Single category", "All works"))
+
+plotCategories <- ggplot(categorySummary, aes(x = Category, y = Number.of.Works)) + 
+                  geom_col(alpha=1)+
+                  theme_half_open() +
+                  background_grid() +
+                  facet_wrap(.~Split) +
+                  theme(legend.title=element_blank(),
+                        axis.title.x = element_blank(),
+                        axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+                  labs(y="Number of Works")
+plotCategories
+
+rm(singleCategorySummary, multipleCategorySummary, categorySummary, plotCategories)
+
+```
+
+# Engagement by a single category
+
+For simplicity I'm only looking at works tagged with a single category here.
+
+"Multi" seems to have most words, despite being a rather small category, and collects quite a bit of Hits, Kudos, Comments and Bookmarks. It's possible that a number of those works are collections of stories for many fandoms, which amplifies the engagement numbers.
+
+Overall, "M/M" category works collect at least a third as as many hits as all others. It also yeilds most kudos and comments, closely followed by 'Gen', with all others being significantly less popular. 'Gen' and 'M/M' also get the most bookmarks.
+
+```{r categoriesSingleEngagement, message = FALSE, warning = FALSE, fig.width=10, fig.height=6}
+
+statsCategory <- stats[unlist(lapply(category, function(x) length(x))) == 1,]
+statsCategory$Category <- as.factor(unlist(category[unlist(lapply(category, function(x) length(x))) == 1]))
+statsCategory$Category <- factor(statsCategory$Category, levels = c('Gen', 'F/F', 'F/M', 'M/M', 'Multi', 'Other', 'No category'))
+statsCategory$Divisor <- unlist(lapply(statsCategory$Category, function(x) summary(statsCategory$Category)[names(summary(statsCategory$Category)) == x]))
+statsCategory$Words.per.Work <- statsCategory$Words/statsCategory$Divisor
+statsCategory$Hits.per.Work <- statsCategory$Hits/statsCategory$Divisor
+statsCategory$Kudos.per.Work <- statsCategory$Kudos/statsCategory$Divisor
+statsCategory$Comments.per.Work <- statsCategory$Comments/statsCategory$Divisor
+statsCategory$Bookmarks.per.Work <- statsCategory$Bookmarks/statsCategory$Divisor
+statsCategory$Works.Percent <- 1/statsCategory$Divisor
+
+barWorksCategory <- plot_bar_color(statsCategory, 'Category', 'Rating', 'right')
+barWordsCategory <- plot_col_color(statsCategory, 'Category', 'Words.per.Work', 'Rating', 'right')
+barHitsCategory <- plot_col_color(statsCategory, 'Category', 'Hits.per.Work', 'Rating', 'right')
+barKudosCategory <- plot_col_color(statsCategory, 'Category', 'Kudos.per.Work', 'Rating', 'right')
+barCommentsCategory <- plot_col_color(statsCategory, 'Category', 'Comments.per.Work', 'Rating', 'right')
+barBookmarksCategory <- plot_col_color(statsCategory, 'Category', 'Bookmarks.per.Work','Rating', 'right')
+
+plot_grid(plot_grid( barWorksCategory + theme(legend.position="none"),
+           barWordsCategory + theme(legend.position="none"),
+           barHitsCategory + theme(legend.position="none"),
+           barKudosCategory + theme(legend.position="none"),
+           barCommentsCategory + theme(legend.position="none"),
+           barBookmarksCategory + theme(legend.position="none"),
+           align = 'hv'),
+          get_legend(barWorksCategory + theme(legend.title=element_blank())),
+          rel_widths = c(4,1))
+
+```
+
+# Ratings percentages by a single category
+
+Out of the 3 main shipping categories, in absolute numbers "F/M" has most E rated works, and "F/F" has the least. However, in relative amounts "M/M" category has more explicit works (`r round(100*sum(statsCategory$Category == "M/M" & statsCategory$Rating == "Explicit")/sum(statsCategory$Category == "M/M"))`%) than either "F/F" or "F/M", but not overwhelmingly so. Overall, the distributions of ratings between the categories for ATLA seem very close in ratings, unlike for LOK and especially TDP.
+
+```{r categoriesSingleEngagementPercent, message = FALSE, warning = FALSE, fig.width=10, fig.height=6}
+
+plotWorksCategoryNormalized <- plot_col_color(statsCategory, 'Rating', 'Works.Percent', 'Rating', 'none')+
+                               scale_y_continuous(labels=scales::percent)+
+                               facet_wrap(.~Category)
+plotWorksCategoryNormalized
+
+rm(barWorksCategory, barWordsCategory, barHitsCategory, barKudosCategory, barCommentsCategory, barBookmarksCategory, plotWorksCategoryNormalized)
+
+```
+
+#Single Category through time
+
+Interestingly, seasons 3 and 4 of LOK brought increase of 'F/F' category popularity in ATLA, likely due to works being tagged with both fandom tags. Recent peak shows high number of 'M/M' works, which may be due to recent rise in popularity of Zukka - 'Sokka/Zuko (Avatar)' relationship.
+
+```{r singleRatingTime, message = FALSE, fig.width=10, fig.height=6}
+
+plotDatesRatingDensity <- ggplot(statsCategory, aes(x = Date, col=Category)) + 
+                    geom_density(alpha = 0.1)+
+                    geom_vline(xintercept=seasonsStart)+
+                    geom_vline(xintercept=seasonsEnd, linetype ="longdash")+
+                    geom_vline(xintercept=ao3birth, col='red')+
+                    geom_vline(xintercept=seasonsStartLOK, col='blue')+
+                    geom_vline(xintercept=seasonsEndLOK, linetype ="longdash", col='blue')+
+                    scale_x_date(date_breaks="12 months")+
+                    scale_color_manual(values = custompalette) +
+                    theme_half_open() +
+                    background_grid() +
+                    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                          legend.position = 'right')
+plotDatesRatingDensity
+
+rm(seasonsStartLOK, seasonsEndLOK,seasonsStart, seasonsEnd, plotDatesRatingDensity)
+```
+
+
+# Archive Warnings
+
+Majority of works are tagged with "No Archive Warnings Apply", followed by a sizable fraction of "Creator Chose Not To Use Archive Warnings". It seems to be a common matter of confusion between the usage of those two warnings, so it's possible that a lot of "Creator Chose Not To Use Archive Warnings" are mistagged "No Archive Warnings Apply".
+
+```{r warningBars, message = FALSE}
+
+multipleWarningSummary <- data.frame(Warning = c("No Archive Warnings Apply",
+                                                  "Graphic Depictions Of Violence",
+                                                  "Major Character Death",
+                                                  "Rape/Non-Con",
+                                                  "Underage",
+                                                  "Creator Chose Not To Use Archive Warnings"),
+                              Number.of.Works = c(sum(grepl("No Archive Warnings Apply",warnings)),
+                                                  sum(grepl("Graphic Depictions Of Violence",warnings)),
+                                                  sum(grepl("Major Character Death",warnings)),
+                                                  sum(grepl("Rape/Non-Con",warnings)),
+                                                  sum(grepl("Underage",warnings)),
+                                                  sum(grepl("Creator Chose Not To Use Archive Warnings",warnings))) )
+
+multipleWarningSummary$Warning <- factor(multipleWarningSummary$Warning, levels = c("No Archive Warnings Apply",
+                                                                                    "Graphic Depictions Of Violence",
+                                                                                    "Major Character Death",
+                                                                                    "Rape/Non-Con",
+                                                                                    "Underage",
+                                                                                    "Creator Chose Not To Use Archive Warnings"))
+
+plotWarnings <- plot_col(multipleWarningSummary, 'Warning', 'Number.of.Works', 'right')
+plotWarnings
+
+rm(multipleWarningSummary, plotWarnings)
+
+```
+
+# Multiple Fandoms
+
+Number of works tagged with more than 1 fandom is `r length(fandom[unlist(lapply(fandom, length)) > 1])`, but number of works tagged with more than 2 fandoms is `r length(fandom[unlist(lapply(fandom, length)) > 2])` which seems to be due to works often being tagged with both "Avatar: Legend of Korra" and "Avatar: The Last Airbender".
+
+Number of works explicitly tagged as 'crossover' is just `r length(fandom[grep('crossover',freeform, ignore.case=TRUE)])`.
+
+# Authors by Works
+
+Top 30 of most prolific authors in the tag by the number of stories as of data collection date:
+
+```{r authorsWorks, message = FALSE}
+topList <- 30
+
+AuthorTable <- data.frame('Author' = names(summary(as.factor(unlist(author)))[1:topList]),
+                          'Number of Stories' = summary(as.factor(unlist(author)))[1:topList])
+row.names(AuthorTable) <- c()
+
+kable(AuthorTable,
+      col.names = c('Author', 'Number of Stories'))
+
+rm(AuthorTable)
+```
+
+Top place is occupied by orphan_account, which is an artifact of archive' works orphaning function.
+
+# Authors by Words
+
+Only `r sum(unlist(lapply(author, length))>1)` works have more than one author. In cases where works had more than one author, I assumed that each of them contributed an equal amounts of words.
+
+Top 30 of most prolific authors in the tag by the number of words written as of data collection date:
+
+```{r authorsWords, message = FALSE}
+
+wordsByAuthor <- c()
+
+for (i in 1:length(words)){
+  if (length(author[[i]]) > 1) {
+    wordsByAuthor <- c(wordsByAuthor, rep(words[[i]]/length(author[[5]]), length(author[[i]]) ) )
+  } else {
+    wordsByAuthor <- c(wordsByAuthor, words[[i]])
+  }
+}
+
+AuthorWordsTable <- data.frame('Author' = as.factor(unlist(author)),
+                               'Words' = wordsByAuthor)
+
+AuthorWordsSummary <- ddply(AuthorWordsTable, .(Author), 
+                            summarize, 
+                            Total.Words = sum(Words))
+AuthorWordsSummary <- AuthorWordsSummary[order(AuthorWordsSummary$Total.Words, decreasing = TRUE),]
+row.names(AuthorWordsSummary) <- c()
+
+topList <- 30
+
+kable(AuthorWordsSummary[1:topList,],
+      col.names = c('Author', 'Total Words'))
+
+rm(wordsByAuthor, i, AuthorWordsTable, AuthorWordsSummary)
+```
+
+Interestingly, orphan_account made it to the top by the number of words written as well.
+
+# Characters
+
+Top 30 of the most popular characters:
+
+```{r characters, message = FALSE}
+topList <- 30
+CharacterTable<- data.frame('Character' = names(summary(as.factor(unlist(character)))[1:topList]),
+                          'Number of Stories' = summary(as.factor(unlist(character)))[1:topList])
+row.names(CharacterTable) <- c()
+
+kable(CharacterTable,
+      col.names = c('Character', 'Number of Stories'))
+
+rm(CharacterTable)
+```
+
+# Relationships
+
+Top 30 of the most popular relationships:
+
+I don't have access to Ao3's system of synonymous tags, so by virtue of text processing some relationship tags here are repeated.
+
+"Katara/Zuko (Avatar)" is the most popular relationship in ATLA. They are followed by "Sokka/Zuko (Avatar)", and "Aang/Katara (Avatar)".
+
+```{r relationships, message = FALSE}
+topList <- 30
+RelationshipsTable<- data.frame('Relationship' = names(summary(as.factor(unlist(relationships)))[1:topList]),
+                          'Number of Stories' = summary(as.factor(unlist(relationships)))[1:topList])
+row.names(RelationshipsTable) <- c()
+
+kable(RelationshipsTable,
+      col.names = c('Relationship', 'Number of Stories'))
+
+rm(RelationshipsTable)
+```
+
+# Freeform tags
+
+Top 30 of the most popular freeform tags:
+
+```{r freeform, message = FALSE}
+topList <- 30
+FreeformTable<- data.frame('Freeform' = names(summary(as.factor(unlist(freeform)))[1:topList]),
+                          'Number of Stories' = summary(as.factor(unlist(freeform)))[1:topList])
+row.names(FreeformTable) <- c()
+
+kable(FreeformTable,
+      col.names = c('Freeform Tag', 'Number of Stories'))
+
+rm(FreeformTable)
+```
+
+# Languages
+
+Unsurprisingly, most works are written in English. Apologies for U+. kable package for whatever reason murders unicode characters. The languages in question are Russian (Русский),Chinese (中文), Hebrew(עברית), and Vietnamese (Tiếng Việt).
+
+```{r languages, message = FALSE}
+#topList <- 30
+
+languagesList <- summary(as.factor(unlist(language)))
+
+LanguageTable <- data.frame('Language' = names(languagesList),
+                            'Number of Stories' = languagesList )
+LanguageTable <- LanguageTable[order(LanguageTable$Number.of.Stories, decreasing=TRUE),]
+row.names(LanguageTable) <- c()
+
+kable(LanguageTable,
+      col.names = c('Language', 'Number of Stories'))
+
+#languagesList
+
+#rm(LanguageTable)
+```
+
+# Other links
+
+[Ao3 data analysis for The Dragon Prince (Cartoon)](https://darthaline.github.io/Ao3SearchAnalysis/fandoms/TDP/TDP_processing_notebook.nb.html)
+
+[Ao3 data analysis for Avatar: Legend of Korra](https://darthaline.github.io/Ao3SearchAnalysis/fandoms/LOK/LOK_processing_notebook.nb.html)
+
+If you enjoyed my analysis, please, consider [buying me a coffee](https://ko-fi.com/D1D8RIG5) or some other beverage.
