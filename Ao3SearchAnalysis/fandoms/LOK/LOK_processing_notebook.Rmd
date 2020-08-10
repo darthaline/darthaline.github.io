@@ -427,7 +427,7 @@ rm(barWorksCategory, barWordsCategory, barHitsCategory, barKudosCategory, barCom
 
 ```
 
-#Single Category through time
+# Single Category through time
 
 Seasons 3 and 4 of LOK brought a huge rise in 'F/F' category popularity. There's a smaller peak around summer 2017 which may be due to release of "The Legend of Korra: Turf Wars – Part One" in July 2017.
 
