@@ -133,7 +133,8 @@ stats <- data.frame(Words = unlist(words, recursive = FALSE),
                     Bookmarks = as.numeric(as.character(bookmarks)),
                     Hits = as.numeric(as.character(hits)),
                     WIP = unlist(WIP, recursive = FALSE),
-                    Rating = unlist(rating, recursive = FALSE))
+                    Rating = unlist(rating, recursive = FALSE),
+                    Date = do.call("c", date))
 
 stats$Rating <- factor(stats$Rating, levels = c("Not Rated", "General Audiences", "Teen And Up Audiences", "Mature", "Explicit"))
 
@@ -164,7 +165,7 @@ At around 2017 the popularity steadies at the level of approximately season 1 pe
 
 Again, some works have been published even before the initial air date of season 1, which could possibly be attributed to ATLA popularity and trailer/Comic Cons hype.
 
-```{r timelineTotal, message = FALSE}
+```{r timelineTotal, message = FALSE, fig.width=10, fig.height=6}
 
 #data$Timestamp <- parse_date_time2(as.character(data$Timestamp), orders = "%d/%m/%Y %H:%M:%S")
 #data$day <- as.Date(data$Timestamp)
@@ -174,10 +175,7 @@ seasonsStart <- as.Date(seasonsStart)
 seasonsEnd <- c("2012-06-23", "2013-11-22", "2014-08-22", "2014-12-19")
 seasonsEnd <- as.Date(seasonsEnd)
 
-dates <- data.frame(date = do.call("c", date),
-                    WIP = unlist(WIP))
-
-plotDatesDensityTotal <- ggplot(dates, aes(x = date)) + 
+plotDatesDensityTotal <- ggplot(stats, aes(x = Date)) + 
                     geom_density(alpha = 0.1)+
                     geom_vline(xintercept=seasonsStart)+
                     geom_vline(xintercept=seasonsEnd, linetype ="longdash")+
@@ -195,9 +193,9 @@ I collect data from the Ao3 search page (rather than works pages, as it's less d
 
 If we plot Complete Works and Works in Progress separately, we still observe an overall upward trend, but due to the structure of release dates it's a bit difficult to draw any conclusions about multichapter drift. Interestingly, if we focus on the works in progress, we see that the current peak seems to start earlier, which may be attributed to 10 year anniversary of ATLA Bluray release in June 2018.
 
-```{r timelineWIP, message = FALSE}
+```{r timelineWIP, message = FALSE, fig.width=10, fig.height=6}
 
-plotDatesDensity <- ggplot(dates, aes(x = date, col=WIP)) + 
+plotDatesDensity <- ggplot(stats, aes(x = Date, col=WIP)) + 
                     geom_density(alpha = 0.1)+
                     geom_vline(xintercept=seasonsStart)+
                     geom_vline(xintercept=seasonsEnd, linetype ="longdash")+
@@ -208,7 +206,7 @@ plotDatesDensity <- ggplot(dates, aes(x = date, col=WIP)) +
                           legend.position = 'right')
 plotDatesDensity
 
-rm(seasonsStart, seasonsEnd, dates, plotDatesDensity)
+rm(plotDatesDensity)
 
 ```
 
@@ -429,6 +427,27 @@ rm(barWorksCategory, barWordsCategory, barHitsCategory, barKudosCategory, barCom
 
 ```
 
+#Single Category through time
+
+Seasons 3 and 4 of LOK brought a huge rise in 'F/F' category popularity. There's a smaller peak around summer 2017 which may be due to release of "The Legend of Korra: Turf Wars – Part One" in July 2017.
+
+```{r singleRatingTime, message = FALSE, fig.width=10, fig.height=6}
+
+plotDatesRatingDensity <- ggplot(statsCategory, aes(x = Date, col=Category)) + 
+                    geom_density(alpha = 0.1)+
+                    geom_vline(xintercept=seasonsStart)+
+                    geom_vline(xintercept=seasonsEnd, linetype ="longdash")+
+                    scale_x_date(date_breaks="6 months")+
+                    scale_color_manual(values = custompalette) +
+                    theme_half_open() +
+                    background_grid() +
+                    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                          legend.position = 'right')
+plotDatesRatingDensity
+
+rm(seasonsStart, seasonsEnd, plotDatesRatingDensity)
+```
+
 # Archive Warnings
 
 Majority of works are tagged with "No Archive Warnings Apply", followed by a sizable fraction of "Creator Chose Not To Use Archive Warnings". It seems to be a common matter of confusion between the usage of those two warnings, so it's possible that a lot of "Creator Chose Not To Use Archive Warnings" are mistagged "No Archive Warnings Apply".
@@ -601,5 +620,7 @@ kable(LanguageTable,
 # Other links
 
 [Ao3 data analysis for The Dragon Prince (Cartoon)](https://darthaline.github.io/Ao3SearchAnalysis/fandoms/TDP/TDP_processing_notebook.nb.html)
+
+[Ao3 data analysis for Avatar: The Last Airbender](https://darthaline.github.io/Ao3SearchAnalysis/fandoms/ATLA/ATLA_processing_notebook.nb.html)
 
 If you enjoyed my analysis, please, consider [buying me a coffee](https://ko-fi.com/D1D8RIG5) or some other beverage.

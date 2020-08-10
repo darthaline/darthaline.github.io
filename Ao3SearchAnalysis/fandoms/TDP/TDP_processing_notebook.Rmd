@@ -154,7 +154,8 @@ stats <- data.frame(Words = unlist(words, recursive = FALSE),
                     Bookmarks = as.numeric(as.character(bookmarks)),
                     Hits = as.numeric(as.character(hits)),
                     WIP = unlist(WIP, recursive = FALSE),
-                    Rating = unlist(rating, recursive = FALSE))
+                    Rating = unlist(rating, recursive = FALSE),
+                    Date = do.call("c", date))
 
 stats$Rating <- factor(stats$Rating, levels = c("Not Rated", "General Audiences", "Teen And Up Audiences", "Mature", "Explicit"))
 
@@ -175,7 +176,7 @@ rm(rating, kudos, comments, bookmarks, hits)
 
 Vertical lines on the graph indicate season release dates according to [Wiki article](https://en.wikipedia.org/wiki/The_Dragon_Prince#Episodes). As expected, after each new season, there's a peak of activity which fades in about 2 months. Curiously, a few works were posted before official season 1 release. This may be attributed to the series trailer drop in July 2018 at the San Diego Comic-Con.
 
-```{r timelineTotal, message = FALSE}
+```{r timelineTotal, message = FALSE, fig.width=10, fig.height=6}
 
 #data$Timestamp <- parse_date_time2(as.character(data$Timestamp), orders = "%d/%m/%Y %H:%M:%S")
 #data$day <- as.Date(data$Timestamp)
@@ -186,7 +187,7 @@ seasons <- as.Date(seasons)
 dates <- data.frame(date = do.call("c", date),
                     WIP = unlist(WIP))
 
-plotDatesDensityTotal <- ggplot(dates, aes(x = date)) + 
+plotDatesDensityTotal <- ggplot(stats, aes(x = Date)) + 
                     geom_density(alpha = 0.1)+
                     geom_vline(xintercept=seasons)+
                     scale_x_date(date_breaks="2 months")+
@@ -203,9 +204,9 @@ It's important to note, that I collect data from the Ao3 search page (rather tha
 
 If we plot Complete Works and Works in Progress separately, we still see an upward trend in both, but the slope characterising the growth of Work In progress peaks seems steeper than for Complete Works, which to me indicates at least partial effect of the multichapter drift.
 
-```{r timelineWIP, message = FALSE}
+```{r timelineWIP, message = FALSE, fig.width=10, fig.height=6}
 
-plotDatesDensity <- ggplot(dates, aes(x = date, col=WIP)) + 
+plotDatesDensity <- ggplot(stats, aes(x = Date, col=WIP)) + 
                     geom_density(alpha = 0.1)+
                     geom_vline(xintercept=seasons)+
                     scale_x_date(date_breaks="2 months")+
@@ -215,7 +216,7 @@ plotDatesDensity <- ggplot(dates, aes(x = date, col=WIP)) +
                           legend.position = 'right')
 plotDatesDensity
 
-rm(seasons, dates, plotDatesDensity)
+rm(plotDatesDensity)
 
 ```
 
@@ -493,10 +494,29 @@ plotWorksCategoryNormalized <- plot_col_color(statsCategory, 'Rating', 'Works.Pe
                                facet_wrap(.~Category)
 plotWorksCategoryNormalized
 
-rm(statsCategory, barWorksCategory, barWordsCategory, barHitsCategory, barKudosCategory, barCommentsCategory, barBookmarksCategory, plotWorksCategoryNormalized)
+rm(barWorksCategory, barWordsCategory, barHitsCategory, barKudosCategory, barCommentsCategory, barBookmarksCategory, plotWorksCategoryNormalized)
 
 ```
 
+# Single Category through time
+
+Interestingly, season 1 sees a peak of 'Gen' category. Season 2 gives higher rise to 'M/M' (possibly related to Aaravos reveal and 'Aaravos/Viren (The Dragon Prince)' shipping) and 'F/M' (the rise of 'Callum/Rayla (The Dragon Prince)'?), and season 3 is followed by a high rise of 'F/F' (following the development of 'Amaya/Janai (The Dragon Prince)' relationship) and a modest 'M/M' peak ('Ethari/Runaan (The Dragon Prince)' due to Ethari finally getting official name?).
+
+```{r singleRatingTime, message = FALSE, fig.width=10, fig.height=6}
+
+plotDatesRatingDensity <- ggplot(statsCategory, aes(x = Date, col=Category)) + 
+                    geom_density(alpha = 0.1)+
+                    geom_vline(xintercept=seasons)+
+                    scale_x_date(date_breaks="2 months")+
+                    scale_color_manual(values = custompalette) +
+                    theme_half_open() +
+                    background_grid() +
+                    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                          legend.position = 'right')
+plotDatesRatingDensity
+
+rm(seasons, plotDatesRatingDensity)
+```
 
 # Archive Warnings
 
