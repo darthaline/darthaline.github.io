@@ -34,7 +34,7 @@ library(lubridate) # for dates
 
 library(plyr) # ddply, to summarize number of words by author
 
-load('TLOK_worksData.RData')
+load('LOK_worksData.RData')
 
 ```
 
@@ -154,7 +154,7 @@ rm(rating, kudos, comments, bookmarks, hits)
 
 Solid vertical lines on the graph indicate initial air dates, and dashed indicate final air dates, according to [Wiki article](https://en.wikipedia.org/wiki/The_Legend_of_Korra#Series_overview).
 
-For The Dragon Prince (TDP) we saw a peak of activity after each season, but here it's not quite the case. After season 1 there's a peak, which lasts for almost a year, unlike the 2 months we saw in case of TDP. TDP is released via Netflix where the entire season is released all at once, while The Legend of Korra (TLOK) has been steadily gaining momentum during its 2-month-long air period. 
+For The Dragon Prince (TDP) we saw a peak of activity after each season, but here it's not quite the case. After season 1 there's a peak, which lasts for almost a year, unlike the 2 months we saw in case of TDP. TDP is released via Netflix where the entire season is released all at once, while The Legend of Korra (LOK) has been steadily gaining momentum during its 2-month-long air period. 
 
 During and after season 2 release we observe a minor dip, but there's a growth in the months after. While it was well critically acclaimed, season 2 was not as well recieved by the fandom, and it's possible that after its conclusion many people took on writing their own personal interpretation.
 
@@ -248,7 +248,7 @@ rm(total, percentile, percentileData, wordsPercentiles, hitsPercentiles, kudosPe
 
 * There are approximately 3 times as many Complete Works as there are Works in Progress.
 * Works in Progress are approximately 3 times longer than Complete ones.
-* Both Complete Works and Works in Progress for TLOK are longer than works for TDP.
+* Both Complete Works and Works in Progress for LOK are longer than works for TDP.
 * Works in Progress get approximately 30% more hits than Complete ones.
 * Both Complete Works and Works in Progress get approximately the same amounts of kudos.
 * Works in Progress get approximately 2 times as many comments as Complete ones (however, again, there's no way to filter out author's comments in the search selection).
@@ -297,7 +297,7 @@ rm(statsWIP, barWorksWIP, barWordsWIP, barHitsWIP, barKudosWIP, barCommentsWIP, 
 * Works rated G and T make up the majority of works, with M and E works only making approximately a third of those numbers.
 * Works rated G are on average the shortest (~2500 words), followed by Not Rated works (>5000 words), T (~11000 words), E (~ 15000 words), and M (~22000 words). The trend of M rated works being the longest we observed in TDP holds up here as well.
 * Not Rated works and works rated G get fewest hits (~1500). Number of hits rises with the rating. E rated works are most popular (~8500).
-* Number of kudos doesn't quite scale up with the number of hits, but unlike in TDP case E rated works also get the most kudos (~220). The difference in distribution might be due to the fact that TLOK fandom on average skews older.
+* Number of kudos doesn't quite scale up with the number of hits, but unlike in TDP case E rated works also get the most kudos (~220). The difference in distribution might be due to the fact that LOK fandom on average skews older.
 * Works rated M get the most comments (>50) which might correlate with them being the longest.
 * Number of bookmarks doesn't quite scale up with the number of hits, again, but it grows with the rating, reaching maximum for E rated works (~25 bookmarks).
 
@@ -534,7 +534,7 @@ Top 30 of the most popular relationships:
 
 I don't have access to Ao3's system of synonymous tags, so by virtue of text processing some relationship tags here are repeated.
 
-Overwhelmingly, "Korra/Asami Sato"/"Korrasami"/"Korra/Asami" is the most popular relationship in TLOK, contributing to popularity of "F/F" category. They are followed by "Korra/Mako (Avatar)", and "Bolin/Opal (Avatar)".
+Overwhelmingly, "Korra/Asami Sato"/"Korrasami"/"Korra/Asami" is the most popular relationship in LOK, contributing to popularity of "F/F" category. They are followed by "Korra/Mako (Avatar)", and "Bolin/Opal (Avatar)".
 
 ```{r relationships, message = FALSE}
 topList <- 30
