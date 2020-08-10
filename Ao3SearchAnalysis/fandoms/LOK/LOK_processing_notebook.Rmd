@@ -1,7 +1,7 @@
 ---
 title: "Ao3 data analysis for Avatar: Legend of Korra"
 author: "darthaline"
-date: "7 Aug 2020"
+date: "10 Aug 2020"
 output:
   html_notebook:
     code_folding: "hide"
@@ -38,7 +38,7 @@ load('LOK_worksData.RData')
 
 ```
 
-This is a document detailing analysis of [`r tagValue` Ao3 tag](https://archiveofourown.org/tags/Avatar:%20Legend%20of%20Korra/works) data, collected on the 7 Aug 2020. I haven't figured out a way to get my scrapper to log in into Ao3 (yet? rvest seems to have some trouble with page redirects), so results here are based on the works visible without authentication, which likely filters out preferentially explicit/problemantic works from the selection.
+This is a document detailing analysis of [`r tagValue` Ao3 tag](https://archiveofourown.org/tags/Avatar:%20Legend%20of%20Korra/works) data, collected on the 10 Aug 2020. I haven't figured out a way to get my scrapper to log in into Ao3 (yet? rvest seems to have some trouble with page redirects), so results here are based on the works visible without authentication, which likely filters out preferentially explicit/problemantic works from the selection.
 
 ```{r plottingFunctions, collapse=TRUE, warning=FALSE}
 
