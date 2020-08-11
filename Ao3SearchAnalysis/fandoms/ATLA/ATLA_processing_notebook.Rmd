@@ -633,4 +633,6 @@ kable(LanguageTable,
 
 [Ao3 data analysis for Avatar: Legend of Korra](https://darthaline.github.io/Ao3SearchAnalysis/fandoms/LOK/LOK_processing_notebook.nb.html)
 
+Ao3 data analysis for Avatar: The Last Airbender
+
 If you enjoyed my analysis, please, consider [buying me a coffee](https://ko-fi.com/D1D8RIG5) or some other beverage.

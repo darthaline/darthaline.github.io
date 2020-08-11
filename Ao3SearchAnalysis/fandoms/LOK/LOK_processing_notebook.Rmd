@@ -621,6 +621,8 @@ kable(LanguageTable,
 
 [Ao3 data analysis for The Dragon Prince (Cartoon)](https://darthaline.github.io/Ao3SearchAnalysis/fandoms/TDP/TDP_processing_notebook.nb.html)
 
+Ao3 data analysis for Avatar: Legend of Korra
+
 [Ao3 data analysis for Avatar: The Last Airbender](https://darthaline.github.io/Ao3SearchAnalysis/fandoms/ATLA/ATLA_processing_notebook.nb.html)
 
 If you enjoyed my analysis, please, consider [buying me a coffee](https://ko-fi.com/D1D8RIG5) or some other beverage.
