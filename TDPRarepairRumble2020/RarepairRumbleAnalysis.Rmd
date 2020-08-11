@@ -316,16 +316,16 @@ rm(sourceplot, mylegend, myplots, data)
 ## Round 6
 
 ```{r round6Data, collapse=TRUE}
-data <- read.csv2 (file.path('data','RarePair Rumble Semifinal! (round 6).csv'), header = TRUE, sep=',')
+data <- read.csv2 (file.path('data','RarePair Rumble Semifinal! (round 6).csv'), header = TRUE, sep=',', stringsAsFactors=FALSE)
+data[2] [data[2] == ""] <- "No Source Provided"
 dataActive <- data[c(2, grep('Actively.ship', colnames(data)))]
 data <- data[-grep('Actively.ship', colnames(data))]
 dataCompeting <- data[c(2, grep('Competing.for', colnames(data)))]
 data <- data[-grep('Competing.for', colnames(data))]
-data <- sapply(data, as.character)
-data[,'Where.did.you.find.the.link.to.this.round.'][data[,'Where.did.you.find.the.link.to.this.round.'] == '']<- "No Source Provided"
+#data <- sapply(data, as.character)
+#data[,'Where.did.you.find.the.link.to.this.round.'][data[,'Where.did.you.find.the.link.to.this.round.'] == '']<- "No Source Provided"
 data[data == "I don't want to vote for either of these ships"] <- "_choose not to vote"
 data[data == ""] <- "_choose not to vote"
-data <- data.frame(data)
 
 titles <- colnames(data)
 titles[titles == "Where.did.you.find.the.link.to.this.round."] <- "source"
@@ -345,7 +345,7 @@ colnames(dataCompeting)<- c("source",
                             "Comp.27.vs.28",
                             "Comp.22.vs.23")
 dataCompeting$source <- as.character(dataCompeting$source)
-dataCompeting$source[dataCompeting$source == ""] <- "No Source Provided"
+
 dataCompeting <- sapply(dataCompeting, as.character)
 dataCompeting[dataCompeting == "I don't want to vote for any of these ships"] <- "_choose not to vote"
 dataCompeting[dataCompeting == "I don't want to vote for either of these ships"] <- "_choose not to vote"
@@ -353,12 +353,7 @@ dataCompeting[dataCompeting == ""] <- "_choose not to vote"
 
 rm(titles)
 
-```
-
-```{r round6ActiveShippingData}
-
 dataActive <- sapply(dataActive, as.character)
-dataActive[,'Where.did.you.find.the.link.to.this.round.'][dataActive[,'Where.did.you.find.the.link.to.this.round.'] == '']<- "No Source Provided"
 titles <- c("source",
             "Soren x Ezran",
             "Villads x Viren",
@@ -438,12 +433,12 @@ plot_grid(plot_grid(plotlist = myplots, align='hv'),
 
 ### Order tie-breakers
 
-```{r round6PlotsTiebreakers, fig.width=10, fig.height=12}
+```{r round6PlotsTiebreakers, fig.width=10, fig.height=15}
 dataCompeting <- as.data.frame(dataCompeting)
-myplots <- lapply(colnames(dataCompeting)[2:7], plot_data_column, data = dataCompeting, legendPosition = 'none')
+myplots <- lapply(colnames(dataCompeting)[2:8], plot_data_column, data = dataCompeting, legendPosition = 'none')
 
 plot_grid(plot_grid(plotlist = myplots, align='hv'),
-          plot_grid(plotlist = rep(list(mylegend),2), nrow=2, rel_heights = c(1,2)),
+          plot_grid(plotlist = rep(list(mylegend),3), nrow=3, rel_heights = c(1,2,2)),
           rel_widths = c(4,1),
           align='hv')
 
