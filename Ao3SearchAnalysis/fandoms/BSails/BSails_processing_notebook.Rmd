@@ -1,7 +1,7 @@
 ---
 title: "Ao3 data analysis for Black Sails"
 author: "darthaline"
-date: "10 Aug 2020"
+date: "11 Aug 2020"
 output:
   html_notebook:
     code_folding: "hide"
@@ -38,7 +38,7 @@ load('BSails_worksData.RData')
 
 ```
 
-This is a document detailing analysis of [`r tagValue` Ao3 tag](https://archiveofourown.org/tags/Black%20Sails/works) data, collected on the 10 Aug 2020. I haven't figured out a way to get my scrapper to log in into Ao3 (yet? rvest seems to have some trouble with page redirects), so results here are based on the works visible without authentication, which likely filters out preferentially explicit/problemantic works from the selection.
+This is a document detailing analysis of [`r tagValue` Ao3 tag](https://archiveofourown.org/tags/Black%20Sails/works) data, collected on the 11 Aug 2020. I haven't figured out a way to get my scrapper to log in into Ao3 (yet? rvest seems to have some trouble with page redirects), so results here are based on the works visible without authentication, which likely filters out preferentially explicit/problemantic works from the selection.
 
 ```{r plottingFunctions, collapse=TRUE, warning=FALSE}
 
@@ -155,31 +155,25 @@ rm(rating, kudos, comments, bookmarks, hits)
 
 Solid vertical lines on the graph indicate initial air dates, and dashed indicate final air dates, according to [Wiki article](https://en.wikipedia.org/wiki/The_Legend_of_Korra#Series_overview).
 
-For The Dragon Prince (TDP) we saw a peak of activity after each season, but here it's not quite the case. After season 1 there's a peak, which lasts for almost a year, unlike the 2 months we saw in case of TDP. TDP is released via Netflix where the entire season is released all at once, while The Legend of Korra (LOK) has been steadily gaining momentum during its 2-month-long air period. 
+We see a peak of activity after each season which builds up to a major peak after season 4. A minor bump in May 2020 could be attributed to coronavirus locdowns.
 
-During and after season 2 release we observe a minor dip, but there's a growth in the months after. While it was well critically acclaimed, season 2 was not as well recieved by the fandom, and it's possible that after its conclusion many people took on writing their own personal interpretation.
-
-Season 3 and 4, released in rapid succession fall onto that upward trend, building up to a massive peak which takes approximately 2 years to fall back to pre-season 3 levels.
-
-At around 2017 the popularity steadies at the level of approximately season 1 peak, up until new recent upward growth. It's hard to say for sure, but this new peak seems to fall approximately onto coronavirus lockdown and release of Avatar: the Last Airbender (ATLA) on US Netflix in May 2020.
-
-Again, some works have been published even before the initial air date of season 1, which could possibly be attributed to ATLA popularity and trailer/Comic Cons hype.
+There are 3 works published before season 1 premier, one on 22 June 2013, which is probably an artifact of work import, the other two are dated 22 of January are tagged with "Anne Bonny/"Calico" Jack Rackham " and could be due to trailer hype and/or historical pirates fandom.
 
 ```{r timelineTotal, message = FALSE, fig.width=10, fig.height=6}
 
 #data$Timestamp <- parse_date_time2(as.character(data$Timestamp), orders = "%d/%m/%Y %H:%M:%S")
 #data$day <- as.Date(data$Timestamp)
 
-seasonsStart <- c("2012-04-14", "2013-09-13", "2014-06-27", "2014-10-03")
+seasonsStart <- c("2014-01-25", "2015-01-24", "2016-01-23", "2017-01-29")
 seasonsStart <- as.Date(seasonsStart)
-seasonsEnd <- c("2012-06-23", "2013-11-22", "2014-08-22", "2014-12-19")
+seasonsEnd <- c("2014-03-15", "2015-03-28", "2016-03-26", "2017-04-2")
 seasonsEnd <- as.Date(seasonsEnd)
 
 plotDatesDensityTotal <- ggplot(stats, aes(x = Date)) + 
                     geom_density(alpha = 0.1)+
                     geom_vline(xintercept=seasonsStart)+
                     geom_vline(xintercept=seasonsEnd, linetype ="longdash")+
-                    scale_x_date(date_breaks="6 months")+
+                    scale_x_date(date_breaks="3 months")+
                     theme_half_open() +
                     background_grid() +
                     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
@@ -189,9 +183,7 @@ plotDatesDensityTotal
 rm(plotDatesDensityTotal)
 ```
 
-I collect data from the Ao3 search page (rather than works pages, as it's less disruptive to site's function), so I don't have access to initial postage dates, only the latest updates. This means that the upward trend in works over time can be an artifact of series getting more popular, but also could be attributed to multichapter works drifting further in time due to updates.
-
-If we plot Complete Works and Works in Progress separately, we still observe an overall upward trend, but due to the structure of release dates it's a bit difficult to draw any conclusions about multichapter drift. Interestingly, if we focus on the works in progress, we see that the current peak seems to start earlier, which may be attributed to 10 year anniversary of ATLA Bluray release in June 2018.
+If we plot Complete Works and Works in Progress separately, we still observe an overall peak structure in complete works, but, interestingly, Works in Progress follow the basic structure but don't fluctuate much with new seasons.
 
 ```{r timelineWIP, message = FALSE, fig.width=10, fig.height=6}
 
@@ -199,7 +191,7 @@ plotDatesDensity <- ggplot(stats, aes(x = Date, col=WIP)) +
                     geom_density(alpha = 0.1)+
                     geom_vline(xintercept=seasonsStart)+
                     geom_vline(xintercept=seasonsEnd, linetype ="longdash")+
-                    scale_x_date(date_breaks="6 months")+
+                    scale_x_date(date_breaks="3 months")+
                     theme_half_open() +
                     background_grid() +
                     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
@@ -215,11 +207,11 @@ rm(plotDatesDensity)
 
 Small plotting cheat: all the numbers on the Y axis are increased by 1 to include the case of 0 into the plot (otherwise excluded because of log scale).
 
-* About 75% of works have more than a 1000 words, but only about 15% have more than 10000 words.
-* Only about 50% of works have over a 1000 hits.
+* About 75% of works have more than a 1000 words, but only about 10% have more than 10000 words.
+* Only about 25% of works have over a 1000 hits.
 * Only about 25% of works have more than a 100 kudos.
-* Only about 35% of works get more than 10 comments.
-* Approximately 12% of works have no comments (tail end).
+* Only about 50% of works get more than 10 comments.
+* Approximately 5% of works have no comments (tail end).
 * Only approximately 35% of works get more than 10 bookmarks.
 * Approximately 15% of works have no bookmarks (tail end).
 
@@ -244,13 +236,12 @@ rm(total, percentile, percentileData, wordsPercentiles, hitsPercentiles, kudosPe
 
 # Complete Work vs Work in Progress distributions
 
-* There are approximately 3 times as many Complete Works as there are Works in Progress.
-* Works in Progress are approximately 3 times longer than Complete ones.
-* Both Complete Works and Works in Progress for LOK are longer than works for TDP.
-* Works in Progress get approximately 30% more hits than Complete ones.
-* Both Complete Works and Works in Progress get approximately the same amounts of kudos.
+* Majority of works are Complete
+* Works in Progress are more than 3 times longer than Complete ones.
+* Both Complete Works and Works in Progress get approximately the same amounts of hits.
+* Complete Works get about 20% more kudos.
 * Works in Progress get approximately 2 times as many comments as Complete ones (however, again, there's no way to filter out author's comments in the search selection).
-* Works in Progress get slightly more bookmarks than Complete ones.
+* Complete Works get slightly more bookmarks than Works in Progress.
 
 ```{r totalWorksWIP, message = FALSE, warning=FALSE, fig.width=8, fig.height=6}
 
@@ -292,12 +283,10 @@ rm(statsWIP, barWorksWIP, barWordsWIP, barHitsWIP, barKudosWIP, barCommentsWIP, 
 
 # Rating distributions
 
-* Works rated G and T make up the majority of works, with M and E works only making approximately a third of those numbers.
-* Works rated G are on average the shortest (~2500 words), followed by Not Rated works (>5000 words), T (~11000 words), E (~ 15000 words), and M (~22000 words). The trend of M rated works being the longest we observed in TDP holds up here as well.
-* Not Rated works and works rated G get fewest hits (~1500). Number of hits rises with the rating. E rated works are most popular (~8500).
-* Number of kudos doesn't quite scale up with the number of hits, but unlike in TDP case E rated works also get the most kudos (~220). The difference in distribution might be due to the fact that LOK fandom on average skews older.
-* Works rated M get the most comments (>50) which might correlate with them being the longest.
-* Number of bookmarks doesn't quite scale up with the number of hits, again, but it grows with the rating, reaching maximum for E rated works (~25 bookmarks).
+* Most works are rated T and E, but G and M rated works are not far behind.
+* Works rated G are on average the shortest (~1500 words), followed by T (~4000 words), Not rated (~4500 words), E (~ 9000 words), and M (~11000 words). The trend of M rated works being the longest we observed in other fandoms holds here as well.
+* G rated works get fewest hits (~500), followed by Not Rated (~700). Otherwise, the number of hits rises with the rating. E rated works are most popular (~1600).
+* Number of kudos, comments and bookmarks seem to be broadly proportional to the number of hits.
 
 
 ```{r totalWorksRating, message = FALSE, warning=FALSE, fig.width=8, fig.height=6}
@@ -332,9 +321,9 @@ rm(statsRating, barWorksRating, barWordsRating, barHitsRating, barKudosRating, b
 
 There are `r length(category[unlist(lapply(category, function(x) length(x))) == 1])` works tagged with a single category, and `r length(category[unlist(lapply(category, function(x) length(x))) > 1])` tagged with 2 or more (up until all 6).
 
-'F/F' is the most popular category, followed by 'F/M', 'Gen', and 'M/M'.
+'M/M' is the most popular category, and it dwarfs all the others.
 
-Multiple category fics strongly contribute towards 'F/M' count, then to 'F/F', 'Gen', and 'M/M', and only marginally to 'Multi' and 'Other'.
+Multiple category fics strongly contribute towards 'M/M' count, then to 'F/M', 'Gen', and 'F/F', and only marginally to 'Multi' and 'Other'.
 
 ```{r categoriesBars, message = FALSE}
 
@@ -376,9 +365,9 @@ rm(singleCategorySummary, multipleCategorySummary, categorySummary, plotCategori
 
 For simplicity I'm only looking at works tagged with a single category here.
 
-"Multi" seems to have most words, despite being a rather small category, and collects quite a bit of Hits, Kudos, Comments and Bookmarks. It's possible that a number of those works are collections of stories for many fandoms, which amplifies the engagement numbers.
+"Other" seems to have most words, despite being a tiny category, and collects quite a bit of Hits, Kudos, Comments and Bookmarks. It's possible that a number of those works are collections of stories for many fandoms, which amplifies the engagement numbers.
 
-Overall, "F/F" category works collect twice as many hits, kudos, and bookmarks as the next category, and more than thrice as many comments as "M/M" works.
+'M/M' and 'F/F' works collect the most hits, but 'F/F' gets significantly fewer kudos, comments and bookmarks.
 
 ```{r categoriesSingleEngagement, message = FALSE, warning = FALSE, fig.width=10, fig.height=6}
 
@@ -414,7 +403,7 @@ plot_grid(plot_grid( barWorksCategory + theme(legend.position="none"),
 
 # Ratings percentages by a single category
 
-Out of the 3 main shipping categories, in absolute numbers "F/F" has most E rated works, and "M/M" has the least. However, in relative amounts "M/M" category has more explicit works (`r round(100*sum(statsCategory$Category == "M/M" & statsCategory$Rating == "Explicit")/sum(statsCategory$Category == "M/M"))`%) than either "F/F" or "F/M". Overall, the distributions of ratings between the categories are much more balanced than in TDP, perhaps, reflecting a variety of highly plot relevant older female characters in the cast.
+In absolute numbers "M/M" is the most popular category, and in relative numbers it gets the most explicit works.
 
 ```{r categoriesSingleEngagementPercent, message = FALSE, warning = FALSE, fig.width=10, fig.height=6}
 
@@ -429,7 +418,7 @@ rm(barWorksCategory, barWordsCategory, barHitsCategory, barKudosCategory, barCom
 
 # Single Category through time
 
-Seasons 3 and 4 of LOK brought a huge rise in 'F/F' category popularity. There's a smaller peak around summer 2017 which may be due to release of "The Legend of Korra: Turf Wars – Part One" in July 2017.
+Season 1 had a significant "F/F" bump, likely to "Eleanor Guthrie/Max" relationship. In season 2 we see a dip, but seasons 3 and 4 slowly build up to a strong peak, likely due to "Anne Bonny/Max" endgame. Season 1 is almonst non-existent in terms of "M/M" category, which may be attributed to early series build up being described as "straightbaiting". Throughout seasons 2-4 it however builds up to a strong peak, with complex "Captain Flint/John Silver" developments and "Captain Flint/Thomas Hamilton" finale.
 
 ```{r singleRatingTime, message = FALSE, fig.width=10, fig.height=6}
 
@@ -437,7 +426,7 @@ plotDatesRatingDensity <- ggplot(statsCategory, aes(x = Date, col=Category)) +
                     geom_density(alpha = 0.1)+
                     geom_vline(xintercept=seasonsStart)+
                     geom_vline(xintercept=seasonsEnd, linetype ="longdash")+
-                    scale_x_date(date_breaks="6 months")+
+                    scale_x_date(date_breaks="3 months")+
                     scale_color_manual(values = custompalette) +
                     theme_half_open() +
                     background_grid() +
@@ -483,9 +472,7 @@ rm(multipleWarningSummary, plotWarnings)
 
 # Multiple Fandoms
 
-Number of works tagged with more than 1 fandom is `r length(fandom[unlist(lapply(fandom, length)) > 1])`, but number of works tagged with more than 2 fandoms is `r length(fandom[unlist(lapply(fandom, length)) > 2])` which seems to be due to works often being tagged with both "Avatar: Legend of Korra" and "Avatar: The Last Airbender".
-
-Number of works explicitly tagged as 'crossover' is just `r length(fandom[grep('crossover',freeform, ignore.case=TRUE)])`.
+Number of works tagged with more than 1 fandom is `r length(fandom[unlist(lapply(fandom, length)) > 1])`, but the number of works explicitly tagged as 'crossover' is just `r length(fandom[grep('crossover',freeform, ignore.case=TRUE)])`.
 
 # Authors by Works
 
@@ -621,6 +608,10 @@ kable(LanguageTable,
 
 [Ao3 data analysis for The Dragon Prince (Cartoon)](https://darthaline.github.io/Ao3SearchAnalysis/fandoms/TDP/TDP_processing_notebook.nb.html)
 
+[Ao3 data analysis for Avatar: Legend of Korra](https://darthaline.github.io/Ao3SearchAnalysis/fandoms/LOK/LOK_processing_notebook.nb.html)
+
 [Ao3 data analysis for Avatar: The Last Airbender](https://darthaline.github.io/Ao3SearchAnalysis/fandoms/ATLA/ATLA_processing_notebook.nb.html)
+
+Ao3 data analysis for Black Sails
 
 If you enjoyed my analysis, please, consider [buying me a coffee](https://ko-fi.com/D1D8RIG5) or some other beverage.
