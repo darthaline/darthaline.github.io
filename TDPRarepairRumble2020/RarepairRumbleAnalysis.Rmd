@@ -447,7 +447,6 @@ plot_grid(plot_grid(plotlist = myplots, align='hv'),
 
 ```
 
-
 # Other links
 
 [Ao3 data analysis for The Dragon Prince (Cartoon)](https://darthaline.github.io/Ao3SearchAnalysis/fandoms/TDP/TDP_processing_notebook.nb.html)
