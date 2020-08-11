@@ -113,7 +113,10 @@ Test cases for valid cases.
 #url <- 'https://archiveofourown.org/tags/Avatar:%20Legend%20of%20Korra/works'
 
 #atla page
-url <- 'https://archiveofourown.org/tags/Avatar:%20The%20Last%20Airbender/works'
+#url <- 'https://archiveofourown.org/tags/Avatar:%20The%20Last%20Airbender/works'
+
+#bsails page
+url <- "https://archiveofourown.org/tags/Black%20Sails/works"
 ```
 
 Before we start processing anything, we check that the search has valid results.
