@@ -344,6 +344,8 @@ colnames(dataCompeting)<- c("source",
                             "Comp.34.vs.35.vs.36",
                             "Comp.27.vs.28",
                             "Comp.22.vs.23")
+dataCompeting$source <- as.character(dataCompeting$source)
+dataCompeting$source[dataCompeting$source == ""] <- "No Source Provided"
 dataCompeting <- sapply(dataCompeting, as.character)
 dataCompeting[dataCompeting == "I don't want to vote for any of these ships"] <- "_choose not to vote"
 dataCompeting[dataCompeting == "I don't want to vote for either of these ships"] <- "_choose not to vote"
