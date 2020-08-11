@@ -69,8 +69,8 @@ plot_data_column_title <- function (data, column, legendPosition) {
     ggplot(data, aes_string(x = column)) + 
     geom_bar(aes(col=source, fill=source), alpha = 0.5)+
     scale_colour_manual(values = custompalette)+
-    scale_fill_manual(values = custompalette) +
-    scale_y_continuous(limits=c(0,60))+
+    scale_fill_manual(values = custompalette,drop=FALSE) +
+    scale_x_discrete(drop=FALSE)+
     theme_half_open() +
     background_grid() +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
@@ -273,7 +273,6 @@ sourceplot <- plot_data_column(data, colnames(data)[2], 'right') +
                        theme(legend.title=element_blank())
 mylegend <- get_legend(sourceplot)
 sourceplot
-
 ```
 
 ### Active shipping preferences
@@ -314,3 +313,143 @@ rm(sourceplot, mylegend, myplots, data)
 
 ```
 
+## Round 6
+
+```{r round6Data, collapse=TRUE}
+data <- read.csv2 (file.path('data','RarePair Rumble Semifinal! (round 6).csv'), header = TRUE, sep=',')
+dataActive <- data[c(2, grep('Actively.ship', colnames(data)))]
+data <- data[-grep('Actively.ship', colnames(data))]
+dataCompeting <- data[c(2, grep('Competing.for', colnames(data)))]
+data <- data[-grep('Competing.for', colnames(data))]
+data <- sapply(data, as.character)
+data[,'Where.did.you.find.the.link.to.this.round.'][data[,'Where.did.you.find.the.link.to.this.round.'] == '']<- "No Source Provided"
+data[data == "I don't want to vote for either of these ships"] <- "_choose not to vote"
+data[data == ""] <- "_choose not to vote"
+data <- data.frame(data)
+
+titles <- colnames(data)
+titles[titles == "Where.did.you.find.the.link.to.this.round."] <- "source"
+titles <- sub("X.", "", titles)
+titles <- sub("[[:digit:]]", "", titles)
+titles <- sub("[[:digit:]]", "", titles)
+titles <- sub(".vs.", "_vs_", titles)
+titles <- sub("\\..", "", titles)
+colnames(data)<- titles
+
+colnames(dataCompeting)<- c("source",
+                            "Comp.124.vs.125",
+                            "Comp.59.vs.60.vs.61",
+                            "Comp.55.vs.56",
+                            "Comp.39.vs.40",
+                            "Comp.34.vs.35.vs.36",
+                            "Comp.27.vs.28",
+                            "Comp.22.vs.23")
+dataCompeting <- sapply(dataCompeting, as.character)
+dataCompeting[dataCompeting == "I don't want to vote for any of these ships"] <- "_choose not to vote"
+dataCompeting[dataCompeting == "I don't want to vote for either of these ships"] <- "_choose not to vote"
+dataCompeting[dataCompeting == ""] <- "_choose not to vote"
+
+rm(titles)
+
+```
+
+```{r round6ActiveShippingData}
+
+dataActive <- sapply(dataActive, as.character)
+dataActive[,'Where.did.you.find.the.link.to.this.round.'][dataActive[,'Where.did.you.find.the.link.to.this.round.'] == '']<- "No Source Provided"
+titles <- c("source",
+            "Soren x Ezran",
+            "Villads x Viren",
+            "Allen x Lujanne",
+            "Khessa x Amaya",
+            "Kasef x Soren",
+            "Sarai x Aaravos",
+            "Annika x Janai",
+            "Aaravos x Lujanne",
+            "Callum x Soren",
+            "Fareeda x Neha",
+            "Ziard x Aaravos",
+            "Soren x Crow Master",
+            "Fareeda x Viren",
+            "Soren x Marcos",
+            "Fareeda x Florian",
+            "Lissa x Sarai")
+colnames(dataActive) <- titles
+
+dataActive[dataActive == ""] <- "_choose not to vote"
+dataActive <- data.frame(dataActive)
+
+rm(titles)
+
+```
+
+### Distribution of platforms
+
+```{r round6PlotsSource, collapse=TRUE}
+
+sourceplot <- plot_data_column(data, colnames(data)[2], 'right') + 
+                       theme(legend.title=element_blank())
+mylegend <- get_legend(sourceplot)
+sourceplot
+```
+
+### Votes result
+
+```{r round6Plots}
+
+myplots <- lapply(colnames(data)[3:4], plot_data_column, data = data, legendPosition = 'none')
+
+plot_grid(plot_grid(plotlist = myplots, align='h', nrow=1),
+          mylegend,
+          rel_widths = c(3,1))
+
+```
+
+### Next shipping event participants
+
+```{r round6PlotsNext}
+
+myplots <- lapply(colnames(data)[5:6], plot_data_column, data = data, legendPosition = 'none')
+
+plot_grid(plot_grid(plotlist = myplots, align='h', nrow=1),
+          mylegend,
+          rel_widths = c(3,1))
+
+rm(myplots, data)
+
+```
+
+### Active shipping tie-breakers
+
+```{r round6ActiveShippingPlots, fig.width=10, fig.height=15}
+
+myplots <- lapply(colnames(dataActive)[2:17], plot_data_column_title, data = dataActive, legendPosition = 'none')
+
+plot_grid(plot_grid(plotlist = myplots, align='hv'),
+          plot_grid(plotlist = rep(list(mylegend),4), nrow=4, rel_heights = c(2,3,3,2)),
+          rel_widths = c(4,1),
+          align='hv')
+
+#rm(dataActive, myplots)
+
+```
+
+### Order tie-breakers
+
+```{r round6PlotsTiebreakers, fig.width=10, fig.height=12}
+dataCompeting <- as.data.frame(dataCompeting)
+myplots <- lapply(colnames(dataCompeting)[2:7], plot_data_column, data = dataCompeting, legendPosition = 'none')
+
+plot_grid(plot_grid(plotlist = myplots, align='hv'),
+          plot_grid(plotlist = rep(list(mylegend),2), nrow=2, rel_heights = c(1,2)),
+          rel_widths = c(4,1),
+          align='hv')
+
+```
+
+
+# Other links
+
+[Ao3 data analysis for The Dragon Prince (Cartoon)](https://darthaline.github.io/Ao3SearchAnalysis/fandoms/TDP/TDP_processing_notebook.nb.html)
+
+If you enjoyed this analysis, please, consider [buying me a coffee](https://ko-fi.com/D1D8RIG5) or some other beverage.
