@@ -170,9 +170,9 @@ seasonsEnd <- c("2014-03-15", "2015-03-28", "2016-03-26", "2017-04-2")
 seasonsEnd <- as.Date(seasonsEnd)
 
 plotDatesDensityTotal <- ggplot(stats, aes(x = Date)) + 
-                    geom_density(alpha = 0.1)+
-                    geom_vline(xintercept=seasonsStart)+
-                    geom_vline(xintercept=seasonsEnd, linetype ="longdash")+
+                    geom_density()+
+                    geom_vline(xintercept=as.numeric(seasonsStart))+
+                    geom_vline(xintercept=as.numeric(seasonsEnd), linetype ="longdash")+
                     scale_x_date(date_breaks="3 months")+
                     theme_half_open() +
                     background_grid() +
