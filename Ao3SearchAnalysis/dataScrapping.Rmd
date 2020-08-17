@@ -116,7 +116,25 @@ Test cases for valid cases.
 #url <- 'https://archiveofourown.org/tags/Avatar:%20The%20Last%20Airbender/works'
 
 #bsails page
-url <- "https://archiveofourown.org/tags/Black%20Sails/works"
+#url <- "https://archiveofourown.org/tags/Black%20Sails/works"
+
+#hannibal page
+#url <- "https://archiveofourown.org/tags/Hannibal%20(TV)/works"
+
+#spop page
+#url <- 'https://archiveofourown.org/tags/She-Ra%20and%20the%20Princesses%20of%20Power%20(2018)/works'
+
+#rick and morty
+#url <-'https://archiveofourown.org/tags/Rick%20and%20Morty/works'
+
+#castlevania
+#url <- 'https://archiveofourown.org/tags/Castlevania%20(Cartoon)/works'
+
+#homestuck
+#url <- 'https://archiveofourown.org/tags/Homestuck/works'
+
+#vld
+url <- 'https://archiveofourown.org/tags/Voltron:%20Legendary%20Defender/works'
 ```
 
 Before we start processing anything, we check that the search has valid results.
