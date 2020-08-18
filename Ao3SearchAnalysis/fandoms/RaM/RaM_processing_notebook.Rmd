@@ -1,5 +1,5 @@
 ---
-title: "Ao3 data analysis for Black Sails"
+title: "Ao3 data analysis for Rick and Morty"
 author: "darthaline"
 date: "11 Aug 2020"
 output:
@@ -34,7 +34,7 @@ library(lubridate) # for dates
 
 library(plyr) # ddply, to summarize number of words by author
 
-load('BSails_worksData.RData')
+load('RaM_worksData.RData')
 
 ```
 
@@ -153,7 +153,7 @@ rm(rating, kudos, comments, bookmarks, hits)
 
 # Timeline
 
-Solid vertical lines on the graph indicate initial air dates, and dashed indicate final air dates, according to [Wiki article](https://en.wikipedia.org/wiki/Black_Sails_(TV_series)#Plot).
+Solid vertical lines on the graph indicate initial air dates, and dashed indicate final air dates, according to [Wiki article](https://en.wikipedia.org/wiki/Rick_and_Morty#Episodes).
 
 We see a peak of activity after each season which builds up to a major peak after season 4. A minor bump in May 2020 could be attributed to coronavirus locdowns.
 
@@ -164,9 +164,9 @@ There are 3 works published before season 1 premier, one on 22 June 2013, which 
 #data$Timestamp <- parse_date_time2(as.character(data$Timestamp), orders = "%d/%m/%Y %H:%M:%S")
 #data$day <- as.Date(data$Timestamp)
 
-seasonsStart <- c("2014-01-25", "2015-01-24", "2016-01-23", "2017-01-29")
+seasonsStart <- c("2013-12-02", "2015-07-26", "2017-04-01", "2019-11-10")
 seasonsStart <- as.Date(seasonsStart)
-seasonsEnd <- c("2014-03-15", "2015-03-28", "2016-03-26", "2017-04-02")
+seasonsEnd <- c("2014-04-14", "2015-10-04", "2017-10-01", "2020-05-31")
 seasonsEnd <- as.Date(seasonsEnd)
 
 plotDatesDensityTotal <- ggplot(stats, aes(x = Date)) + 
@@ -682,6 +682,8 @@ kable(LanguageTable,
 
 [Ao3 data analysis for Avatar: The Last Airbender](https://darthaline.github.io/Ao3SearchAnalysis/fandoms/ATLA/ATLA_processing_notebook.nb.html)
 
-Ao3 data analysis for Black Sails
+[Ao3 data analysis for Black Sails](https://darthaline.github.io/Ao3SearchAnalysis/fandoms/BSails/BSails_processing_notebook.nb.html)
+
+Ao3 data analysis for Rick and Morty
 
 If you enjoyed my analysis, please, consider [buying me a coffee](https://ko-fi.com/D1D8RIG5) or some other beverage.
