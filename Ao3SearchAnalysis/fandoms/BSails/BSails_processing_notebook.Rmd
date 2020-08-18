@@ -49,7 +49,7 @@ plot_bar <- function (data, columnX, legendPosition) {
     background_grid() +
     theme(legend.title=element_blank(),
           axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+          axis.text.x = element_text(angle = 90, vjust = 1, hjust=1))+
     labs(y="Number of works")
 }
 
@@ -61,7 +61,7 @@ plot_bar_color <- function (data, columnX, colColor, legendPosition) {
     background_grid() +
     theme(legend.title=element_blank(),
           axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+          axis.text.x = element_text(angle = 90, vjust = 1, hjust=1))+
     labs(y="Number of works")
 }
 
@@ -72,7 +72,7 @@ plot_col <- function (data, columnX, columnY, legendPosition) {
     background_grid() +
     theme(legend.title=element_blank(),
           axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+          axis.text.x = element_text(angle = 90, vjust = 1, hjust=1))+
     labs(y=gsub('\\.', ' ', columnY))
   
 }
@@ -85,7 +85,7 @@ plot_col_color <- function (data, columnX, columnY, colColor, legendPosition) {
     background_grid() +
     theme(legend.title=element_blank(),
           axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+          axis.text.x = element_text(angle = 90, vjust = 1, hjust=1))+
     labs(y=gsub('\\.', ' ', columnY))
   
 }
@@ -153,7 +153,7 @@ rm(rating, kudos, comments, bookmarks, hits)
 
 # Timeline
 
-Solid vertical lines on the graph indicate initial air dates, and dashed indicate final air dates, according to [Wiki article](https://en.wikipedia.org/wiki/The_Legend_of_Korra#Series_overview).
+Solid vertical lines on the graph indicate initial air dates, and dashed indicate final air dates, according to [Wiki article](https://en.wikipedia.org/wiki/Black_Sails_(TV_series)#Plot).
 
 We see a peak of activity after each season which builds up to a major peak after season 4. A minor bump in May 2020 could be attributed to coronavirus locdowns.
 
@@ -226,9 +226,7 @@ plot_grid(wordsPercentiles + theme(legend.position="none"),
           hitsPercentiles + theme(legend.position="none"),
           kudosPercentiles + theme(legend.position="none"),
           commentsPercentiles + theme(legend.position="none"),
-          bookmarksPercentiles + theme(legend.position="none"),
-          get_legend(kudosPercentiles +
-                     theme(legend.title=element_blank())))
+          bookmarksPercentiles + theme(legend.position="none") )
 
 rm(total, percentile, percentileData, wordsPercentiles, hitsPercentiles, kudosPercentiles, commentsPercentiles, bookmarksPercentiles)
 
@@ -284,12 +282,12 @@ rm(statsWIP, barWorksWIP, barWordsWIP, barHitsWIP, barKudosWIP, barCommentsWIP, 
 # Rating distributions
 
 * Most works are rated T and E, but G and M rated works are not far behind.
-* Works rated G are on average the shortest (~1500 words), followed by T (~4000 words), Not rated (~4500 words), E (~ 9000 words), and M (~11000 words). The trend of M rated works being the longest we observed in other fandoms holds here as well.
+* Works rated G are on average the shortest (~1500 words), followed by T (~4000 words), Not rated (~9000 words), E (~ 9000 words), and M (~11000 words). The trend of M rated works being the longest we observed in other fandoms holds here as well.
 * G rated works get fewest hits (~500), followed by Not Rated (~700). Otherwise, the number of hits rises with the rating. E rated works are most popular (~1600).
 * Number of kudos, comments and bookmarks seem to be broadly proportional to the number of hits.
 
 
-```{r totalWorksRating, message = FALSE, warning=FALSE, fig.width=8, fig.height=6}
+```{r totalWorksRating, message = FALSE, warning=FALSE, fig.width=8, fig.height=8}
 
 statsRating <- stats
 statsRating$Divisor <- unlist(lapply(statsRating$Rating, function(x) summary(statsRating$Rating)[names(summary(statsRating$Rating)) == x]))
@@ -353,7 +351,7 @@ plotCategories <- ggplot(categorySummary, aes(x = Category, y = Number.of.Works)
                   facet_wrap(.~Split) +
                   theme(legend.title=element_blank(),
                         axis.title.x = element_blank(),
-                        axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+                        axis.text.x = element_text(angle = 90, vjust = 1, hjust=1))+
                   labs(y="Number of Works")
 plotCategories
 
@@ -434,14 +432,86 @@ plotDatesRatingDensity <- ggplot(statsCategory, aes(x = Date, col=Category)) +
                           legend.position = 'right')
 plotDatesRatingDensity
 
-rm(seasonsStart, seasonsEnd, plotDatesRatingDensity)
+rm(plotDatesRatingDensity)
+```
+
+# Most popular ship tags
+
+Two most popular ships in Black Sails are "Captain Flint/John Silver" ("Captain Flint | James McGraw/John Silver") and "Captain Flint/Thomas Hamilton" ("Captain Flint | James McGraw/Thomas Hamilton"). 
+
+```{r shipsHistogram, message = FALSE, fig.width=8, fig.height=6}
+
+topList <- 8
+topRelationshipsTable<- data.frame('Relationship' = names(summary(as.factor(unlist(relationships)))[1:topList]),
+                          'Number of Stories' = summary(as.factor(unlist(relationships)))[1:topList])
+row.names(topRelationshipsTable) <- c()
+topRelationshipsTable <- topRelationshipsTable[order(topRelationshipsTable$Number.of.Stories, decreasing = TRUE),]
+topRelationshipsTable$Relationship <- factor(as.character(topRelationshipsTable$Relationship), levels=as.character(topRelationshipsTable$Relationship))
+
+relationshipsStats <- data.frame(Date = stats$Date,
+                                 relationship1 = rep(0, length(stats$Date)),
+                                 relationship2 = rep(0, length(stats$Date)),
+                                 relationship3 = rep(0, length(stats$Date)),
+                                 relationship4 = rep(0, length(stats$Date)),
+                                 relationship5 = rep(0, length(stats$Date)),
+                                 relationship6 = rep(0, length(stats$Date)),
+                                 relationship7 = rep(0, length(stats$Date)),
+                                 relationship8 = rep(0, length(stats$Date)))
+for (i in 1:topList){
+  matchingVector <- lapply(relationships, match, table=as.character(topRelationshipsTable$Relationship[i]))
+  matchingVector <- unlist(lapply(matchingVector, sum, na.rm=TRUE))
+  relationshipsStats[i+1] <- matchingVector
+}
+
+#colnames(relationshipsStats)[2:9] <- gsub('/', '\\/', topRelationshipsTable$Relationship)
+
+plotLegendRelationships <- ggplot(topRelationshipsTable, aes(x=Relationship, y=Number.of.Stories, fill=Relationship))+
+  geom_col(alpha=0.7)+
+  scale_fill_manual(values = custompalette)+
+  theme_half_open() +
+  background_grid() +
+  labs(x="",y='Number of Stories')+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+plotLegendRelationships+theme(legend.position = 'none')
+```
+
+# Ship tags through time
+
+Season 3 kickstarted the growth of popularity of "Captain Flint/John Silver", which continued through season 4 and after, however at around March 2019 alternative tag "Captain Flint | James McGraw/John Silver" becomes more popular. Season 4 sees the rapid growth of "Captain Flint/Thomas Hamilton", which similarly switches to alternative tag "Captain Flint/Thomas Hamilton" in March 2019.
+
+```{r shipTagsTime, message = FALSE, fig.width=12, fig.height=6}
+
+plotRelationships <- ggplot() +
+    geom_density(data = relationshipsStats[relationshipsStats$relationship1 > 0,], mapping=aes(x = Date), colour=custompalette[1])+
+    geom_density(data = relationshipsStats[relationshipsStats$relationship2 > 0,], mapping=aes(x = Date), colour=custompalette[2])+
+    geom_density(data = relationshipsStats[relationshipsStats$relationship3 > 0,], mapping=aes(x = Date), colour=custompalette[3])+
+    geom_density(data = relationshipsStats[relationshipsStats$relationship4 > 0,], mapping=aes(x = Date), colour=custompalette[4])+
+    geom_density(data = relationshipsStats[relationshipsStats$relationship5 > 0,], mapping=aes(x = Date), colour=custompalette[5])+
+    geom_density(data = relationshipsStats[relationshipsStats$relationship6 > 0,], mapping=aes(x = Date), colour=custompalette[6])+
+    geom_density(data = relationshipsStats[relationshipsStats$relationship7 > 0,], mapping=aes(x = Date), colour=custompalette[7])+
+    geom_density(data = relationshipsStats[relationshipsStats$relationship8 > 0,], mapping=aes(x = Date), colour=custompalette[8])+
+    geom_vline(xintercept=seasonsStart)+
+    geom_vline(xintercept=seasonsEnd, linetype ="longdash")+
+    scale_x_date(date_breaks="3 months")+
+    scale_color_manual(values = custompalette) +
+    theme_half_open() +
+    background_grid() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+mylegend <- get_legend(plotLegendRelationships)
+
+plot_grid(plotRelationships, mylegend,
+          rel_widths = c(2,1), nrow=1)
+#plotRelationships
+
+#rm(seasons, plotDatesRatingDensity)
 ```
 
 # Archive Warnings
 
 Majority of works are tagged with "No Archive Warnings Apply", followed by a sizable fraction of "Creator Chose Not To Use Archive Warnings". It seems to be a common matter of confusion between the usage of those two warnings, so it's possible that a lot of "Creator Chose Not To Use Archive Warnings" are mistagged "No Archive Warnings Apply".
 
-```{r warningBars, message = FALSE}
+```{r warningBars, message = FALSE, fig.width=6, fig.height=6}
 
 multipleWarningSummary <- data.frame(Warning = c("No Archive Warnings Apply",
                                                   "Graphic Depictions Of Violence",

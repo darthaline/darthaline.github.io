@@ -49,7 +49,7 @@ plot_bar <- function (data, columnX, legendPosition) {
     background_grid() +
     theme(legend.title=element_blank(),
           axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+          axis.text.x = element_text(angle = 90, vjust = 1, hjust=1))+
     labs(y="Number of works")
 }
 
@@ -61,7 +61,7 @@ plot_bar_color <- function (data, columnX, colColor, legendPosition) {
     background_grid() +
     theme(legend.title=element_blank(),
           axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+          axis.text.x = element_text(angle = 90, vjust = 1, hjust=1))+
     labs(y="Number of works")
 }
 
@@ -72,7 +72,7 @@ plot_col <- function (data, columnX, columnY, legendPosition) {
     background_grid() +
     theme(legend.title=element_blank(),
           axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+          axis.text.x = element_text(angle = 90, vjust = 1, hjust=1))+
     labs(y=gsub('\\.', ' ', columnY))
   
 }
@@ -85,7 +85,7 @@ plot_col_color <- function (data, columnX, columnY, colColor, legendPosition) {
     background_grid() +
     theme(legend.title=element_blank(),
           axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+          axis.text.x = element_text(angle = 90, vjust = 1, hjust=1))+
     labs(y=gsub('\\.', ' ', columnY))
   
 }
@@ -306,7 +306,7 @@ rm(statsWIP, barWorksWIP, barWordsWIP, barHitsWIP, barKudosWIP, barCommentsWIP, 
 * T rated works get the most bookmarks (>40) and G rated works get the least (<30).
 
 
-```{r totalWorksRating, message = FALSE, warning=FALSE, fig.width=8, fig.height=6}
+```{r totalWorksRating, message = FALSE, warning=FALSE, fig.width=8, fig.height=8}
 
 statsRating <- stats
 statsRating$Divisor <- unlist(lapply(statsRating$Rating, function(x) summary(statsRating$Rating)[names(summary(statsRating$Rating)) == x]))
@@ -370,7 +370,7 @@ plotCategories <- ggplot(categorySummary, aes(x = Category, y = Number.of.Works)
                   facet_wrap(.~Split) +
                   theme(legend.title=element_blank(),
                         axis.title.x = element_blank(),
-                        axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+                        axis.text.x = element_text(angle = 90, vjust = 1, hjust=1))+
                   labs(y="Number of Works")
 plotCategories
 
@@ -454,7 +454,82 @@ plotDatesRatingDensity <- ggplot(statsCategory, aes(x = Date, col=Category)) +
                           legend.position = 'right')
 plotDatesRatingDensity
 
-rm(seasonsStartLOK, seasonsEndLOK,seasonsStart, seasonsEnd, plotDatesRatingDensity)
+rm(plotDatesRatingDensity)
+```
+
+# Most popular ship tags
+
+Currently "Katara/Zuko (Avatar)" is the most popular ship, with "Sokka/Zuko (Avatar)" following at about 2/3 of the number of works.
+
+```{r shipsHistogram, message = FALSE, fig.width=8, fig.height=6}
+
+topList <- 8
+topRelationshipsTable<- data.frame('Relationship' = names(summary(as.factor(unlist(relationships)))[1:topList]),
+                          'Number of Stories' = summary(as.factor(unlist(relationships)))[1:topList])
+row.names(topRelationshipsTable) <- c()
+topRelationshipsTable <- topRelationshipsTable[order(topRelationshipsTable$Number.of.Stories, decreasing = TRUE),]
+topRelationshipsTable$Relationship <- factor(as.character(topRelationshipsTable$Relationship), levels=as.character(topRelationshipsTable$Relationship))
+
+relationshipsStats <- data.frame(Date = stats$Date,
+                                 relationship1 = rep(0, length(stats$Date)),
+                                 relationship2 = rep(0, length(stats$Date)),
+                                 relationship3 = rep(0, length(stats$Date)),
+                                 relationship4 = rep(0, length(stats$Date)),
+                                 relationship5 = rep(0, length(stats$Date)),
+                                 relationship6 = rep(0, length(stats$Date)),
+                                 relationship7 = rep(0, length(stats$Date)),
+                                 relationship8 = rep(0, length(stats$Date)))
+for (i in 1:topList){
+  matchingVector <- lapply(relationships, match, table=as.character(topRelationshipsTable$Relationship[i]))
+  matchingVector <- unlist(lapply(matchingVector, sum, na.rm=TRUE))
+  relationshipsStats[i+1] <- matchingVector
+}
+
+#colnames(relationshipsStats)[2:9] <- gsub('/', '\\/', topRelationshipsTable$Relationship)
+
+plotLegendRelationships <- ggplot(topRelationshipsTable, aes(x=Relationship, y=Number.of.Stories, fill=Relationship))+
+  geom_col(alpha=0.7)+
+  scale_fill_manual(values = custompalette)+
+  theme_half_open() +
+  background_grid() +
+  labs(x="",y='Number of Stories')+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+plotLegendRelationships+theme(legend.position = 'none')
+```
+
+# Ship tags through time
+
+Due to ATLA being an old fandom which recently got more popular it's a little difficult to see the actual ship dynamics, however it's clear that all of the most popular ships are recieving more attention recently, and that "Katara & Zuko (Avatar)", "Iroh & Zuko (Avatar)", and most noticably "Sokka/Zuko (Avatar)" are getting a lot of new works.
+
+```{r shipTagsTime, message = FALSE, fig.width=12, fig.height=6}
+
+plotRelationships <- ggplot() +
+    geom_density(data = relationshipsStats[relationshipsStats$relationship1 > 0,], mapping=aes(x = Date), colour=custompalette[1])+
+    geom_density(data = relationshipsStats[relationshipsStats$relationship2 > 0,], mapping=aes(x = Date), colour=custompalette[2])+
+    geom_density(data = relationshipsStats[relationshipsStats$relationship3 > 0,], mapping=aes(x = Date), colour=custompalette[3])+
+    geom_density(data = relationshipsStats[relationshipsStats$relationship4 > 0,], mapping=aes(x = Date), colour=custompalette[4])+
+    geom_density(data = relationshipsStats[relationshipsStats$relationship5 > 0,], mapping=aes(x = Date), colour=custompalette[5])+
+    geom_density(data = relationshipsStats[relationshipsStats$relationship6 > 0,], mapping=aes(x = Date), colour=custompalette[6])+
+    geom_density(data = relationshipsStats[relationshipsStats$relationship7 > 0,], mapping=aes(x = Date), colour=custompalette[7])+
+    geom_density(data = relationshipsStats[relationshipsStats$relationship8 > 0,], mapping=aes(x = Date), colour=custompalette[8])+
+    geom_vline(xintercept=seasonsStart)+
+    geom_vline(xintercept=seasonsEnd, linetype ="longdash")+
+    geom_vline(xintercept=ao3birth, col='red')+
+    geom_vline(xintercept=seasonsStartLOK, col='blue')+
+    geom_vline(xintercept=seasonsEndLOK, linetype ="longdash", col='blue')+
+    scale_x_date(date_breaks="12 months")+
+    scale_color_manual(values = custompalette) +
+    theme_half_open() +
+    background_grid() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+mylegend <- get_legend(plotLegendRelationships)
+
+plot_grid(plotRelationships, mylegend,
+          rel_widths = c(2,1), nrow=1)
+#plotRelationships
+
+#rm(seasons, plotDatesRatingDensity)
 ```
 
 
@@ -462,7 +537,7 @@ rm(seasonsStartLOK, seasonsEndLOK,seasonsStart, seasonsEnd, plotDatesRatingDensi
 
 Majority of works are tagged with "No Archive Warnings Apply", followed by a sizable fraction of "Creator Chose Not To Use Archive Warnings". It seems to be a common matter of confusion between the usage of those two warnings, so it's possible that a lot of "Creator Chose Not To Use Archive Warnings" are mistagged "No Archive Warnings Apply".
 
-```{r warningBars, message = FALSE}
+```{r warningBars, message = FALSE, fig.width=6, fig.height=6}
 
 multipleWarningSummary <- data.frame(Warning = c("No Archive Warnings Apply",
                                                   "Graphic Depictions Of Violence",
@@ -634,5 +709,7 @@ kable(LanguageTable,
 [Ao3 data analysis for Avatar: Legend of Korra](https://darthaline.github.io/Ao3SearchAnalysis/fandoms/LOK/LOK_processing_notebook.nb.html)
 
 Ao3 data analysis for Avatar: The Last Airbender
+
+[Ao3 data analysis for Black Sails](https://darthaline.github.io/Ao3SearchAnalysis/fandoms/BSails/BSails_processing_notebook.nb.html)
 
 If you enjoyed my analysis, please, consider [buying me a coffee](https://ko-fi.com/D1D8RIG5) or some other beverage.
