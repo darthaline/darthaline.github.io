@@ -477,7 +477,7 @@ plotLegendRelationships+theme(legend.position = 'none')
 
 # Ship tags through time
 
-Season 3 kickstarted the growth of popularity of "Captain Flint/John Silver", which continued through season 4 and after, however at around March 2019 alternative tag "Captain Flint | James McGraw/John Silver" becomes more popular. Season 4 sees the rapid growth of "Captain Flint/Thomas Hamilton", which similarly switches to alternative tag "Captain Flint/Thomas Hamilton" in March 2019.
+Season 3 kickstarted the growth of popularity of "Captain Flint/John Silver", which continued through season 4 and after, however at around March 2019 alternative tag "Captain Flint | James McGraw/John Silver" becomes more popular. Season 4 sees the rapid growth of "Captain Flint/Thomas Hamilton", which similarly switches to alternative tag "Captain Flint/Thomas Hamilton" in March 2019. The shift in tagging most likely happened due to the efforts of Ao3 tag wranglers.
 
 ```{r shipTagsTime, message = FALSE, fig.width=12, fig.height=6}
 
