@@ -444,6 +444,40 @@ plot_grid(plot_grid(plotlist = myplots, align='hv'),
 
 ```
 
+## Round 7 (Final)
+
+Only 2 ships competed in this round
+
+```{r round7Data, collapse=TRUE}
+data <- read.csv2 (file.path('data','RarePair Rumble Final Round!7.csv'), header = TRUE, sep=',', stringsAsFactors=FALSE)
+data[2] [data[2] == ""] <- "No Source Provided"
+#data[data == "I don't want to vote for either of these ships"] <- "_choose not to vote"
+data[data == ""] <- "_choose not to vote"
+
+colnames(data) <- c("Timestamp", "source", "Winner")
+
+```
+
+### Distribution of platforms
+
+```{r round7PlotsSource, fig.width=6, fig.height=5}
+
+sourceplot <- plot_data_column(data, colnames(data)[2], 'right') + 
+                       theme(legend.title=element_blank())
+#mylegend <- get_legend(sourceplot)
+sourceplot
+
+```
+
+### Votes result
+
+```{r round7Plots, fig.width=5, fig.height=5}
+
+myplots <- plot_data_column(data = data, column = colnames(data)[3], legendPosition = 'right')
+myplots
+
+```
+
 # Other links
 
 [Ao3 data analysis for The Dragon Prince (Cartoon)](https://darthaline.github.io/Ao3SearchAnalysis/fandoms/TDP/TDP_processing_notebook.nb.html)
