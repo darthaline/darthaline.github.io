@@ -768,6 +768,8 @@ kable(LanguageTable,
 #languagesList
 
 #rm(LanguageTable)
+
+#knitr::asis_output("\U2660   \U2665  \U2666  \U2663")
 ```
 
 # Other links
